@@ -1,4 +1,4 @@
-# DEEPFAKE DETECTOR (ตัวช่วยจับคลิปปลอม)
+# Deepfake Detective (ตัวช่วยจับคลิปปลอม)
 
 > 🌐 **ใช้งานเลย:** https://deepfake-detector-x4ae.onrender.com
 > (โฮสต์ฟรีบน Render — ถ้าไม่มีคนใช้สักพักแอปจะหลับ เข้าครั้งแรกอาจรอ ~1 นาที)

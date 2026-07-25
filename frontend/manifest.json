@@ -1,6 +1,6 @@
 {
-  "name": "DEEPFAKE DETECTOR",
-  "short_name": "Deepfake",
+  "name": "Deepfake Detective",
+  "short_name": "Detective",
   "description": "ตรวจคลิป ลิงก์ และข้อความน่าสงสัยว่าเป็นของปลอมหรือมิจฉาชีพ ฟรี",
   "lang": "th",
   "start_url": "./",
