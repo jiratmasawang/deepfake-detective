@@ -59,7 +59,9 @@ body::before {
     radial-gradient(48rem 30rem at 50% -8rem, rgba(14, 165, 233, .16), transparent 62%),
     radial-gradient(30rem 24rem at 92% 6%, rgba(56, 189, 248, .07), transparent 60%);
 }
-#app { position: relative; z-index: 1; max-width: 560px; margin: 0 auto; padding: 20px 18px 108px; }
+#app { position: relative; z-index: 1; max-width: 560px; margin: 0 auto; padding: 20px 18px 26px; }
+/* หน้าที่มีแถบล่าง เผื่อที่ว่างไม่ให้เนื้อหาถูกบัง (ปก/เข้าสู่ระบบ ไม่มีแถบ จึงไม่ต้องเผื่อ) */
+#page-home, #page-check, #page-learn, #page-chat, #page-me { padding-bottom: 96px; }
 
 h1 { font-size: 1.55rem; font-weight: 600; letter-spacing: -.015em; line-height: 1.4; }
 h2 {
@@ -167,7 +169,7 @@ textarea { min-height: 132px; resize: vertical; }
 #nav button.on { color: var(--brand-3); background: rgba(14, 165, 233, .14); }
 
 /* ---------- ปกแอป ---------- */
-#page-cover.active { display: flex; flex-direction: column; min-height: calc(100vh - 128px); animation: none; }
+#page-cover.active { display: flex; flex-direction: column; min-height: calc(100vh - 46px); animation: none; }
 .cover-top { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 22px 0 8px; }
 .cover-mark { width: 108px; height: 108px; filter: drop-shadow(0 14px 34px rgba(14, 165, 233, .42)); }
 .cover-mark .draw { stroke-dasharray: 240; stroke-dashoffset: 240; animation: draw 1.15s var(--ease) .12s forwards; }
@@ -322,6 +324,24 @@ textarea { min-height: 132px; resize: vertical; }
 .hotline { display: flex; align-items: center; gap: 15px; padding: 14px 0; }
 .hotline + .hotline { border-top: 1px solid var(--line); }
 .hotline-num { font-size: 1.5rem; font-weight: 700; color: var(--brand-3); flex: none; letter-spacing: -.02em; }
+
+/* จอเตี้ย (มือถือรุ่นเก่า) — ย่อปกให้ปุ่มยังอยู่ในจอโดยไม่ต้องเลื่อน */
+@media (max-height: 730px) {
+  #app { padding-top: 12px; }
+  .cover-top { padding: 4px 0 4px; }
+  .cover-mark { width: 74px; height: 74px; }
+  .brand { margin-top: 13px; font-size: 1.5rem; }
+  .cover-tag { margin-top: 7px; font-size: 1.04rem; }
+  .cover-sub { margin-top: 5px; font-size: .92rem; }
+  .cover-list { margin: 16px 0 2px; }
+  .cover-item { padding: 9px 4px; gap: 12px; }
+  .cover-item .ic-wrap { width: 38px; height: 38px; border-radius: 12px; }
+  .cover-item .ic { width: 19px; height: 19px; }
+  .cover-item b { font-size: .97rem; }
+  .cover-item span { font-size: .85rem; line-height: 1.45; }
+  .cover-note { margin-top: 9px; }
+  .auth-head { padding: 12px 0 16px; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before { animation-duration: .01ms !important; transition-duration: .01ms !important; }
