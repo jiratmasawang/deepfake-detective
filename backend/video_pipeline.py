@@ -88,19 +88,30 @@ def _has_local_models() -> bool:
     return _local_ready
 
 
+def _has_vision() -> bool:
+    """มีผู้ช่วยที่มองภาพแล้วให้เหตุผลได้ไหม (ใช้เป็นช่องทางสำรองเมื่อไม่มีโมเดลใบหน้า)"""
+    try:
+        import ai_client
+        return ai_client.get_client().supports_vision()
+    except Exception:
+        return False
+
+
 def _mode() -> str | None:
-    """เลือกโหมดให้คะแนน: 'local' (torch) > 'remote' (HF API) > None (ทำไม่ได้)"""
+    """เลือกโหมด: 'local' (torch) > 'remote' (HF API) > 'reason' (ตรรกะอย่างเดียว) > None"""
     if not _has_video_deps():
         return None
     if _has_local_models():
         return "local"
     if HF_TOKEN:
         return "remote"
+    if _has_vision():
+        return "reason"
     return None
 
 
 def video_ready() -> bool:
-    """ตรวจวิดีโอได้ไหม (ให้ /api/health ใช้) — ต้องมี deps + ช่องทางให้คะแนน"""
+    """ตรวจวิดีโอได้ไหม (ให้ /api/health ใช้) — ต้องมี deps + ช่องทางประเมินอย่างน้อย 1 ทาง"""
     return _mode() is not None
 
 
@@ -326,10 +337,46 @@ def _new_base() -> dict:
         "faces_found": 0,
         "suspicious_timestamps": [],
         "artifact_notes_th": [],   # จุดสังเกต "ร่องรอยในภาพ" ที่ตรวจเจอ (อาจว่าง)
+        "reasoning_th": [],        # เหตุผลว่าทำไมดูเหมือนของที่คอมพิวเตอร์สร้าง
+        "reasoning_summary_th": "",
         "error_th": None,
         "models_used": [],
         "disclaimer_th": DISCLAIMER_TH,
     }
+
+
+def _sample_frames_jpeg(frames, count=4):
+    """เลือกภาพนิ่งกระจายทั่วคลิปแล้วแปลงเป็น JPEG (ย่อให้เล็กพอ ประหยัดเวลาส่ง)"""
+    import cv2
+    if not frames:
+        return []
+    step = max(1, len(frames) // count)
+    picked = frames[::step][:count]
+    out = []
+    for _ts, frame in picked:
+        h, w = frame.shape[:2]
+        scale = min(1.0, 640.0 / max(h, w))
+        img = cv2.resize(frame, (int(w * scale), int(h * scale))) if scale < 1.0 else frame
+        ok, buf = cv2.imencode(".jpg", img, [cv2.IMWRITE_JPEG_QUALITY, 82])
+        if ok:
+            out.append(buf.tobytes())
+    return out
+
+
+def _reason_about_frames(frames):
+    """ชั้นตรรกะ: ให้ผู้ช่วยมองภาพจากคลิปแล้วตอบว่าเป็นไปได้จริงไหม
+
+    ปิดช่องโหว่ของโมเดลจับใบหน้า ซึ่งรู้จักแค่ "หน้าคนถูกสลับ"
+    แต่ไม่รู้จักคลิปที่คอมพิวเตอร์สร้างขึ้นใหม่ทั้งคลิป (เช่น สัตว์ทำท่าคน)
+    """
+    try:
+        import ai_client
+        client = ai_client.get_client()
+        if not client.supports_vision():
+            return None
+        return client.analyze_frames(_sample_frames_jpeg(frames))
+    except Exception:
+        return None
 
 
 def _artifact_metrics(face_bgr):
@@ -401,9 +448,11 @@ def _prepare(base: dict):
                 "ระหว่างนี้ให้ใช้กฎทอง 3 ข้อช่วยสังเกตแทน"
             )
             return None, None
-    else:  # remote
+    elif mode == "remote":
         models = _init_remote_models()
         base["models_used"] = list(models)
+    else:  # reason — ไม่มีโมเดลใบหน้า ใช้ชั้นตรรกะอย่างเดียว
+        models = []
     return mode, models
 
 
@@ -434,6 +483,8 @@ def _analyze_file(video_path: str, base: dict, mode: str, models) -> dict:
             artifact_vals.append(_artifact_metrics(face))  # เร็ว ทำในเครื่อง
         except Exception:
             pass
+        if mode == "reason":
+            continue  # ไม่มีโมเดลใบหน้า — ให้ชั้นตรรกะตัดสินอย่างเดียว
         try:
             if mode == "local":
                 per_frame.append((ts, _score_face_local(face, models)))
@@ -445,17 +496,37 @@ def _analyze_file(video_path: str, base: dict, mode: str, models) -> dict:
     base["frames_analyzed"] = len(frames)
     base["faces_found"] = faces_found
 
-    # ไม่เจอใบหน้าเลยทั้งคลิป → ตอบตรง ๆ ไม่เดามั่ว
+    # ชั้นตรรกะ: มองภาพรวมของคลิปว่า "เป็นไปได้จริงไหม"
+    # ทำเสมอ ไม่ว่าจะเจอใบหน้าหรือไม่ เพราะคลิปที่คอมพิวเตอร์สร้างอาจไม่มีคนเลย
+    reason = _reason_about_frames(frames)
+    reason_risk = 0.0
+    if reason:
+        base["reasoning_th"] = reason["findings_th"]
+        base["reasoning_summary_th"] = reason["summary_th"]
+        reason_risk = float(reason["ai_generated_percent"])
+        # เจอสิ่งที่เป็นไปไม่ได้ในความจริง = หลักฐานหนักแน่น อย่าให้ต่ำกว่า 80
+        if reason["impossible_in_real_life"]:
+            reason_risk = max(reason_risk, 80.0)
+
+    # ไม่เจอใบหน้าเลย — เดิมตอบว่าประเมินไม่ได้ แต่ถ้าชั้นตรรกะให้คำตอบได้ก็ใช้ผลนั้น
     if faces_found == 0:
+        if reason:
+            base["status"] = "ok"
+            base["risk_percent"] = round(min(95.0, reason_risk), 1)
+            return base
         base["status"] = "no_face"
         base["error_th"] = (
             "ไม่พบใบหน้าคนในคลิปนี้ จึงประเมินไม่ได้ — "
-            "เครื่องมือนี้ตรวจได้เฉพาะคลิปที่เห็นใบหน้าชัด ๆ "
+            "เครื่องมือนี้ตรวจได้ดีที่สุดกับคลิปที่เห็นใบหน้าชัด ๆ "
             "ให้ใช้กฎทอง 3 ข้อช่วยตัดสินใจแทน"
         )
         return base
 
     if not per_frame:
+        if reason:
+            base["status"] = "ok"
+            base["risk_percent"] = round(min(95.0, reason_risk), 1)
+            return base
         base["error_th"] = (
             "พบใบหน้าในคลิปแต่ประเมินไม่สำเร็จ ลองใหม่อีกครั้งภายหลัง "
             "ระหว่างนี้ให้ใช้กฎทอง 3 ข้อช่วยสังเกตแทน"
@@ -464,18 +535,38 @@ def _analyze_file(video_path: str, base: dict, mode: str, models) -> dict:
 
     # รวมผลแบบค่าเฉลี่ย + timestamp ที่น่าสงสัย (คะแนน > 0.6)
     avg = sum(s for _, s in per_frame) / len(per_frame)
-    risk = avg * 100
+    face_risk = avg * 100
 
     # "สังเกตร่องรอยในภาพ" — สัญญาณเสริมเชิงยืนยัน (ไม่สร้างความเสี่ยงขึ้นเอง)
     # ใช้ยืนยันเมื่อโมเดลสงสัยอยู่แล้วเท่านั้น เพื่อกัน false alarm กับคลิปคนจริงที่ภาพไม่คม
     notes, strong = _artifact_notes(artifact_vals)
     base["artifact_notes_th"] = notes
     if strong and avg >= 0.45:
-        risk = min(95.0, risk + 5)  # ร่องรอยชัด + โมเดลสงสัย → ดันขึ้นเล็กน้อย
+        face_risk = min(95.0, face_risk + 5)
+
+    # รวมสองสัญญาณที่ตอบคนละคำถาม:
+    # - โมเดลใบหน้า: "หน้าคนนี้ถูกสลับไหม"  (เชื่อได้เฉพาะเมื่อในคลิปมีหน้าคนจริง)
+    # - ชั้นตรรกะ:  "ทั้งคลิปนี้เป็นไปได้จริงไหม"
+    #
+    # ตัวจับใบหน้าแบบเก่ามักเข้าใจผิดว่าใบไม้หรือลวดลายคือใบหน้า แล้วให้คะแนนสูงลอย ๆ
+    # จึงให้ชั้นตรรกะยืนยันก่อนว่ามีหน้าคนจริง ถ้าไม่มี ผลจากโมเดลใบหน้าคือขยะ ต้องทิ้ง
+    trust_face = True
+    if reason and not reason.get("has_human_face", True):
+        trust_face = False
+        base["faces_found"] = 0
+        base["artifact_notes_th"] = []   # ร่องรอยที่วัดจาก "หน้า" ที่ไม่ใช่หน้า ก็ใช้ไม่ได้เช่นกัน
+
+    if trust_face:
+        # เตือนเกินยังดีกว่าปล่อยคลิปปลอมผ่านไปให้เหยื่อเชื่อ
+        final = max(face_risk, reason_risk)
+    else:
+        final = reason_risk
 
     base["status"] = "ok"
-    base["risk_percent"] = round(min(95.0, risk), 1)
-    base["suspicious_timestamps"] = [round(ts, 1) for ts, s in per_frame if s > 0.6]
+    base["risk_percent"] = round(min(95.0, final), 1)
+    base["suspicious_timestamps"] = (
+        [round(ts, 1) for ts, s in per_frame if s > 0.6] if trust_face else []
+    )
     if mode == "remote":
         base["models_used"] = list(models)  # เฉพาะตัวที่ยังไม่ตาย
     return base

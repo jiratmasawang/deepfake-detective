@@ -42,6 +42,31 @@ SYSTEM_PROMPT_ANALYZE = """คุณคือผู้เชี่ยวชา�
 - ถ้าเสี่ยงสูง advice_th ต้องมี "โทร 1441" และเตือนอย่าโอนเงิน/กดลิงก์
 - ระวังรูปแบบที่พบบ่อยในไทย: แก๊งคอลเซ็นเตอร์อ้างตำรวจ/บัญชีปลอดภัย, ลิงก์ปลอมดูดเงิน, ชวนลงทุนกำไรสูง, งานออนไลน์ให้เติมเงิน, หลอกให้รักแล้วขอเงิน, เงินกู้เถื่อน, ร้านค้าปลอม, หลอกถูกรางวัล, คลิป/เสียงปลอมขอยืมเงิน"""
 
+SYSTEM_PROMPT_VISION = """คุณคือผู้เชี่ยวชาญแยกแยะว่า "วิดีโอนี้ถ่ายจากของจริง" หรือ "คอมพิวเตอร์สร้างขึ้น"
+ภาพที่ให้มาคือภาพนิ่งหลายภาพจากคลิปเดียวกัน เรียงตามเวลาในคลิป
+
+ให้ใช้เหตุผลตรวจ 4 ด้าน:
+1. เป็นไปได้จริงในโลกนี้ไหม — สัตว์ทำท่าที่สัตว์จริงทำไม่ได้ (เช่น หมายืนสองขายกเวท แมวขับรถ), คนทำท่าที่ร่างกายมนุษย์ทำไม่ได้, ของลอยผิดแรงโน้มถ่วง, ขนาดหรือสัดส่วนผิดจากความจริงมาก
+2. ร่องรอยของภาพที่คอมพิวเตอร์สร้าง — นิ้วมือเกินหรือขาด แขนขาบิดผิดรูป ของสองชิ้นกลืนเป็นชิ้นเดียว ตัวหนังสือมั่วอ่านไม่ออก พื้นผิวลื่นไม่มีรายละเอียด ฟันหรือหูผิดรูป
+3. ฉากสมเหตุสมผลไหม — ทิศทางเงาไม่ตรงกับแสง เงาหายไป ภาพสะท้อนในกระจกหรือน้ำไม่ตรงกับของจริง
+4. ความต่อเนื่องระหว่างภาพ — สิ่งของเปลี่ยนรูป เปลี่ยนจำนวน หรือหายไปเฉย ๆ ระหว่างภาพ
+
+ตอบเป็น JSON เท่านั้น ไม่มีข้อความอื่น:
+{"ai_generated_percent": <0-95>, "impossible_in_real_life": <true|false>, "has_human_face": <true|false>, "findings_th": ["<สิ่งที่เห็น 1>", ...], "summary_th": "<สรุปสั้น 1 ประโยค>"}
+
+has_human_face: มีใบหน้าคนจริง ๆ ปรากฏชัดในภาพหรือไม่ (ถ้าเป็นวิว สัตว์ สิ่งของ หรือคนตัวเล็กมากจนไม่เห็นหน้า ให้ตอบ false)
+
+กติกาการให้คะแนน (สำคัญมาก):
+- 80-95 = เจอสิ่งที่เป็นไปไม่ได้ในความจริงอย่างชัดเจน เช่น สัตว์ทำกิจกรรมของคน หรือร่างกายผิดรูปแบบที่ของจริงเป็นไม่ได้
+- 45-79 = มีหลายจุดน่าสงสัยแต่ยังพอเป็นไปได้ในความจริง
+- 0-20 = คลิปธรรมดาที่ไม่พบความผิดปกติ
+- ห้ามให้คะแนนสูงเพียงเพราะภาพเบลอ ภาพมืด ความละเอียดต่ำ หรือถ่ายด้วยมือถือรุ่นเก่า — สิ่งเหล่านี้เป็นเรื่องปกติของคลิปจริง
+- ถ้าเป็นคลิปคนธรรมดาที่ดูปกติ ให้ตอบต่ำและ findings_th เป็น []
+
+กติกาภาษา:
+- findings_th: บอกเฉพาะสิ่งที่เห็นจริงในภาพ ห้ามเดา 1-4 ข้อ ภาษาไทยง่าย ๆ แบบอธิบายให้ผู้สูงอายุฟัง
+- ห้ามใช้ศัพท์เทคนิคภาษาอังกฤษ"""
+
 DISCLAIMER_TEXT_TH = (
     "ผลนี้เป็นเพียงสัญญาณเตือนให้ระวัง ไม่ใช่คำตัดสิน 100% "
     "ถ้าไม่แน่ใจ อย่าโอนเงิน อย่ากดลิงก์ และปรึกษาคนใกล้ตัวหรือโทร 1441"
@@ -147,6 +172,81 @@ class AIClient:
             r.raise_for_status()
             return r.json()["message"]["content"].strip()
         raise RuntimeError("no provider")
+
+    # -- ฟีเจอร์: ใช้เหตุผลกับภาพจากคลิป -------------------------------------
+    def supports_vision(self) -> bool:
+        """ตอนนี้รองรับการมองภาพเฉพาะ gemini และ claude"""
+        return self.provider in ("gemini", "claude")
+
+    def analyze_frames(self, frames_jpeg: list) -> dict | None:
+        """ดูภาพนิ่งจากคลิปแล้วใช้เหตุผลว่าเป็นของจริงหรือคอมพิวเตอร์สร้าง
+
+        คืน dict {ai_generated_percent, impossible_in_real_life, findings_th, summary_th}
+        หรือ None เมื่อทำไม่ได้ (ผู้ให้บริการไม่รองรับ / เรียกพลาด)
+        """
+        if not frames_jpeg or not self.supports_vision():
+            return None
+        user_text = (
+            f"ภาพต่อไปนี้คือ {len(frames_jpeg)} ภาพจากคลิปเดียวกัน เรียงตามเวลา "
+            "ช่วยวิเคราะห์ตามกติกาแล้วตอบ JSON"
+        )
+        try:
+            if self.provider == "gemini":
+                from google.genai import types
+                parts = [types.Part.from_bytes(data=b, mime_type="image/jpeg") for b in frames_jpeg]
+                parts.append(types.Part.from_text(text=user_text))
+                resp = self._gemini.models.generate_content(
+                    model=self._gemini_model,
+                    contents=parts,
+                    config=types.GenerateContentConfig(
+                        system_instruction=SYSTEM_PROMPT_VISION,
+                        temperature=0.2,
+                    ),
+                )
+                raw = (resp.text or "").strip()
+            else:  # claude
+                import base64
+                content = [
+                    {"type": "image", "source": {"type": "base64", "media_type": "image/jpeg",
+                                                 "data": base64.b64encode(b).decode()}}
+                    for b in frames_jpeg
+                ]
+                content.append({"type": "text", "text": user_text})
+                r = httpx.post(
+                    "https://api.anthropic.com/v1/messages",
+                    headers={"x-api-key": self._claude_key, "anthropic-version": "2023-06-01",
+                             "content-type": "application/json"},
+                    json={"model": self._claude_model, "max_tokens": 1024,
+                          "system": SYSTEM_PROMPT_VISION,
+                          "messages": [{"role": "user", "content": content}]},
+                    timeout=90,
+                )
+                r.raise_for_status()
+                raw = r.json()["content"][0]["text"].strip()
+            return self._parse_vision_json(raw)
+        except Exception:
+            return None
+
+    @staticmethod
+    def _parse_vision_json(raw: str):
+        cleaned = raw.strip()
+        if cleaned.startswith("```"):
+            cleaned = cleaned.split("```")[1]
+            if cleaned.startswith("json"):
+                cleaned = cleaned[4:]
+        start, end = cleaned.find("{"), cleaned.rfind("}")
+        if start == -1 or end == -1:
+            return None
+        data = json.loads(cleaned[start:end + 1])
+        pct = max(0, min(95, int(float(data.get("ai_generated_percent", 0)))))
+        findings = [str(f).strip() for f in data.get("findings_th", []) if str(f).strip()][:4]
+        return {
+            "ai_generated_percent": pct,
+            "impossible_in_real_life": bool(data.get("impossible_in_real_life", False)),
+            "has_human_face": bool(data.get("has_human_face", True)),
+            "findings_th": findings,
+            "summary_th": str(data.get("summary_th", "")).strip(),
+        }
 
     # -- ฟีเจอร์: วิเคราะห์ข้อความ --------------------------------------------
     def analyze_text(self, text: str) -> dict:
