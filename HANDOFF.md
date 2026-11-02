@@ -1,6 +1,6 @@
 # Handoff: UI redesign v2 (ทำต่อใน Claude Code)
 
-Branch: `redesign-v2` — ทดสอบบนจอ 390×844 ครบทุกหน้าแล้ว
+Branch: `redesign-v2` (merge เข้า `main` แล้ว) — ทดสอบบนจอ 390×844 ครบทุกหน้าแล้ว
 
 ## ทำแล้ว
 - โลโก้ใหม่ "Shield Guard" (โล่ไล่สีฟ้า-ม่วง + ใบหน้าพิกเซล + แว่นขยาย) → `frontend/logo.svg`
@@ -21,5 +21,8 @@ Branch: `redesign-v2` — ทดสอบบนจอ 390×844 ครบทุ�
   แถบล่างไม่มีพื้นหลังปุ่มที่เลือก (ตาม mockup), สไลด์ Tips ไม่เห็นขอบสไลด์ข้างเคียง,
   หน้าผลมีแสงเรืองสีตามระดับความเสี่ยง, พรีวิวคลิปแสดงเฟรมแรก, แชทตัด `**` ออก
 
-## ต้องทำต่อ
-- แอปบน Render ยัง deploy จาก repo เดิม `ronglaabyaso-web/deepfake-detector` — ต้องเชื่อม Render กับ repo นี้ใหม่ถ้าอยากให้เวอร์ชันออนไลน์อัปเดต
+## Deploy (Render)
+- เว็บออนไลน์ https://deepfake-detector-x4ae.onrender.com deploy อัตโนมัติจาก `main` ของ repo เดิม `ronglaabyaso-web/deepfake-detector`
+  (บัญชี Render ผูกกับ GitHub `ronglaabyaso-web` ได้บัญชีเดียว เลยเชื่อมกับ repo นี้ตรง ๆ ไม่ได้)
+- ทุกครั้งที่ push `main` ของ repo นี้ ให้ push ไปที่ remote `render` ด้วย: `git push render main`
+  (ตอน push ให้ลงชื่อ GitHub เป็น `ronglaabyaso-web`)
