@@ -1,8 +1,8 @@
 /* service worker — ให้ติดตั้งเป็นแอปได้ + เปิดหน้าแอปได้แม้เน็ตช้า
    กลยุทธ์: หน้าเว็บ/ไฟล์แอปใช้ network-first (ได้ของใหม่เสมอ ถ้าเน็ตล่มใช้ของเก็บไว้)
    ส่วน /api ไม่เก็บเลย (ผลตรวจต้องสดเสมอ) */
-const CACHE = "fakeclip-helper-v7";
-const APP_FILES = ["./", "./index.html", "./manifest.json", "./icon-192.png", "./icon-512.png"];
+const CACHE = "fakeclip-helper-v8";
+const APP_FILES = ["./", "./index.html", "./manifest.json", "./icon-192.png", "./icon-512.png", "./logo.svg"];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(APP_FILES)).then(() => self.skipWaiting()));

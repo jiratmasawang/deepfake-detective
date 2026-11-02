@@ -4,7 +4,7 @@
 เซิร์ฟเวอร์เดียวเสิร์ฟทั้ง API และหน้าเว็บ:
 - GET  /api/health          สถานะเซิร์ฟเวอร์ + โหมด AI + โมเดลวิดีโอ
 - GET  /api/scam-patterns   9 รูปแบบมิจฉาชีพ
-- GET  /api/golden-rules    กฎทอง 3 ข้อ
+- GET  /api/golden-rules    กฎเหล็ก 3 ข้อ
 - POST /api/analyze-text    วิเคราะห์ข้อความ/SMS
 - POST /api/analyze-video   วิเคราะห์คลิปจากลิงก์
 - POST /api/chat            แชทกับผู้ช่วย

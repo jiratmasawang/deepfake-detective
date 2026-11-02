@@ -144,7 +144,7 @@ input::placeholder, textarea::placeholder { color: var(--text-3); }
 #nav .bar { display: flex; background: rgba(14, 21, 58, .88); border: 1px solid var(--line); border-radius: 22px; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); padding: 6px; }
 #nav button { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 7px 0 6px; border-radius: 16px; color: var(--text-3); font-size: .76rem; font-weight: 600; }
 #nav button .ic { width: 24px; height: 24px; }
-#nav button.on { color: var(--blue-2); background: rgba(59,130,246,.14); }
+#nav button.on { color: var(--blue-2); }
 
 /* ---------- Splash ---------- */
 #page-splash { display: none; padding: 0; }
@@ -223,7 +223,8 @@ input::placeholder, textarea::placeholder { color: var(--text-3); }
 @keyframes eq { 50% { transform: scaleY(.45); } }
 
 /* ---------- Result ---------- */
-.res-hero { text-align: center; padding: 8px 0 22px; position: relative; }
+.res-hero { text-align: center; padding: 8px 0 22px; position: relative; isolation: isolate; }
+.res-hero::before { content: ""; position: absolute; left: 50%; top: -60px; width: 420px; height: 300px; transform: translateX(-50%); z-index: -1; background: radial-gradient(closest-side, var(--glow, transparent), transparent); opacity: .4; pointer-events: none; }
 .res-hero .shield { width: 150px; height: 150px; margin: 0 auto 6px; }
 .res-title { font-size: 1.75rem; font-weight: 800; line-height: 1.25; }
 .res-title .hl-bad { color: var(--bad); } .res-title .hl-warn { color: var(--warn); } .res-title .hl-good { color: var(--good); } .res-title .hl-muted { color: var(--text-2); }
@@ -269,7 +270,7 @@ input::placeholder, textarea::placeholder { color: var(--text-3); }
 /* ---------- Tips ---------- */
 .tips-hero { text-align: center; padding: 0 0 8px; }
 .tips-hero svg { width: 120px; height: 120px; margin: 0 auto; }
-.slides { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 16px; margin: 0 -20px; padding: 4px 20px; scrollbar-width: none; }
+.slides { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 40px; margin: 0 -20px; padding: 4px 20px; scrollbar-width: none; }
 .slides::-webkit-scrollbar { display: none; }
 .slide { flex: 0 0 100%; scroll-snap-align: center; }
 .slide h3 { margin-bottom: 10px; color: var(--text-2); font-size: .92rem; font-weight: 600; }
@@ -325,7 +326,7 @@ input::placeholder, textarea::placeholder { color: var(--text-3); }
 
 .spinner { width: 34px; height: 34px; border-radius: 50%; border: 3px solid rgba(90,169,255,.2); border-top-color: var(--blue-2); animation: rot .8s linear infinite; margin: 0 auto; }
 .center { text-align: center; }
-.toast { position: fixed; left: 50%; bottom: calc(100px + env(safe-area-inset-bottom)); transform: translateX(-50%); background: #1d2a6b; border: 1px solid var(--line-2); padding: 11px 18px; border-radius: 999px; font-size: .9rem; z-index: 50; box-shadow: 0 10px 30px rgba(0,0,0,.4); animation: pageIn .2s ease; }
+.toast { position: fixed; left: 50%; bottom: calc(100px + env(safe-area-inset-bottom)); transform: translateX(-50%); background: #1d2a6b; border: 1px solid var(--line-2); padding: 11px 18px; border-radius: 999px; font-size: .9rem; white-space: nowrap; z-index: 50; box-shadow: 0 10px 30px rgba(0,0,0,.4); animation: pageIn .2s ease; }
 .info-body p { color: var(--text-2); font-size: .95rem; line-height: 1.75; margin-bottom: 12px; }
 .info-body h3 { margin: 16px 0 6px; }
 
@@ -455,6 +456,16 @@ function toast(text) {
   const old = document.querySelector(".toast"); if (old) old.remove();
   const t = el("div", { class: "toast", text }); document.body.appendChild(t);
   clearTimeout(toastTimer); toastTimer = setTimeout(() => t.remove(), 2200);
+}
+// คัดลอกข้อความ — ถ้า clipboard API ใช้ไม่ได้ (เช่น เปิดผ่าน http บน LAN) ใช้ textarea ชั่วคราวแทน
+async function copyText(text) {
+  try { await navigator.clipboard.writeText(text); return true; } catch (e) { /* ลองวิธีสำรอง */ }
+  const ta = el("textarea", { readonly: "", style: "position:fixed;top:-200px;opacity:0" });
+  ta.value = text; document.body.appendChild(ta); ta.select();
+  let ok = false;
+  try { ok = document.execCommand("copy"); } catch (e) { /* ไม่รองรับ */ }
+  ta.remove();
+  return ok;
 }
 function topbar(title, opts) {
   opts = opts || {};
@@ -698,11 +709,11 @@ registerPage("home", (root) => {
   const seeAll = el("button", { class: "link" }, el("span", { text: "ดูทั้งหมด" }), icon("right"));
   root.appendChild(el("div", { class: "sec-head" }, el("h2", { text: "เครื่องมือ" }), seeAll));
   const TOOLS = [
-    { ic: "mail", label: "เช็กข้อความ / SMS", go: () => openScan("text") },
+    { ic: "mail", label: "เช็กข้อความ", go: () => openScan("text") },
     { ic: "chat", label: "AI ผู้ช่วย", go: () => showPage("chat") },
-    { ic: "bulb", label: "Tips จับคลิปปลอม", go: () => showPage("tips") },
-    { ic: "clock", label: "ประวัติการตรวจ", go: () => showPage("history"), more: true },
-    { ic: "quiz", label: "Quiz รู้ทันกลโกง", go: () => showPage("quiz"), more: true },
+    { ic: "bulb", label: "Tips", go: () => showPage("tips") },
+    { ic: "clock", label: "ประวัติ", go: () => showPage("history"), more: true },
+    { ic: "quiz", label: "Quiz", go: () => showPage("quiz"), more: true },
     { ic: "info", label: "เกี่ยวกับแอป", go: () => openInfo("about"), more: true },
   ];
   const grid = el("div", { class: "tools" });
@@ -825,7 +836,7 @@ registerPage("scan", (root) => {
     if (!f) { clearFile(); return; }
     if (objUrl) URL.revokeObjectURL(objUrl);
     objUrl = URL.createObjectURL(f);
-    prevVideo.src = objUrl; prevVideo.classList.remove("hidden");
+    prevVideo.src = objUrl + "#t=0.1"; prevVideo.classList.remove("hidden"); // #t ให้มือถือแสดงเฟรมแรกแทนจอดำ
     picked.textContent = "เลือกแล้ว: " + f.name; picked.classList.remove("hidden");
     fileBtn.disabled = false; videoMsg.textContent = "";
   });
@@ -893,7 +904,7 @@ registerPage("analyzing", (root) => {
       <circle cx="62" cy="62" r="54" stroke="url(#sg)" stroke-width="8" fill="none" stroke-linecap="round" stroke-dasharray="210 400"/></svg>
       <div class="bars"><i></i><i></i><i></i><i></i><i></i></div>` }),
     el("div", { class: "note", style: "max-width:340px;margin:0 auto;text-align:left" }, icon("info"),
-      el("span", { text: "เปิดแอปค้างไว้ระหว่างที่เราตรวจให้ ห้ามปิดหน้านี้นะ" }))));
+      el("span", { text: "เปิดแอปค้างไว้ระหว่างตรวจ อย่าเพิ่งปิดหน้านี้นะ" }))));
   function cancel(clear) {
     if (anCtrl) anCtrl.abort();
     anCtrl = null;
@@ -1018,10 +1029,11 @@ registerPage("result", (root) => {
   shareBtn.addEventListener("click", async () => {
     const e = res.entry; if (!e) return;
     const text = `Deepfake Detective: ${res.titleText} (ความเสี่ยง ${e.risk}%)\n${res.subText}\n— ผลนี้เป็นสัญญาณเตือน ไม่ใช่คำตัดสิน 100%`;
-    try {
-      if (navigator.share) await navigator.share({ title: "ผลตรวจ Deepfake Detective", text });
-      else { await navigator.clipboard.writeText(text); toast("คัดลอกผลตรวจแล้ว"); }
-    } catch (err) { /* ผู้ใช้ยกเลิก */ }
+    if (navigator.share) {
+      try { await navigator.share({ title: "ผลตรวจ Deepfake Detective", text }); } catch (err) { /* ผู้ใช้ยกเลิก */ }
+      return;
+    }
+    toast(await copyText(text) ? "คัดลอกผลตรวจแล้ว" : "คัดลอกไม่ได้ ลองแคปหน้าจอแทน");
   });
 
   res.render = function (entry) {
@@ -1051,6 +1063,7 @@ registerPage("result", (root) => {
     res.subText = sub;
 
     hero.textContent = "";
+    hero.style.setProperty("--glow", { fake: "#ff4d6d", sus: "#fbbf24", safe: "#2fd38a", unk: "#5a6fd8" }[lv]);
     hero.appendChild(el("div", { html: resultShield(lv) }));
     hero.appendChild(el("div", { class: "res-title", html: title }));
     hero.appendChild(el("p", { class: "res-sub", text: sub }));
@@ -1097,7 +1110,7 @@ registerPage("result", (root) => {
     }
     if (!details.childNodes.length) details.appendChild(el("p", { class: "muted", text: advice }));
 
-    disc.textContent = "ผลนี้เป็นสัญญาณเตือน ไม่ใช่คำตัดสิน 100% — " + (d.disclaimer_th || "AI อาจพลาดกับคลิปหรือกลโกงรูปแบบใหม่ได้ ให้ยึดกฎเหล็ก 3 ข้อเป็นหลัก");
+    disc.textContent = d.disclaimer_th || "ผลนี้เป็นสัญญาณเตือน ไม่ใช่คำตัดสิน 100% — AI อาจพลาดกับคลิปหรือกลโกงรูปแบบใหม่ได้ ให้ยึดกฎเหล็ก 3 ข้อเป็นหลัก";
     saveBtn.classList.toggle("hidden", false);
     paintSave();
   };
@@ -1236,9 +1249,10 @@ registerPage("tips", (root) => {
   const dots = el("div", { class: "dots" }, el("i", { class: "on" }), el("i"), el("i"));
   root.appendChild(dots);
   const dotEls = dots.querySelectorAll("i");
-  dotEls.forEach((d, i) => d.addEventListener("click", () => slides.scrollTo({ left: i * (slides.clientWidth + 16), behavior: "smooth" })));
+  // gap = padding ซ้าย+ขวา → เลื่อนทีละ clientWidth พอดี และไม่เห็นขอบสไลด์ข้างเคียง
+  dotEls.forEach((d, i) => d.addEventListener("click", () => slides.scrollTo({ left: i * slides.clientWidth, behavior: "smooth" })));
   slides.addEventListener("scroll", () => {
-    const i = Math.round(slides.scrollLeft / (slides.clientWidth + 16));
+    const i = Math.round(slides.scrollLeft / slides.clientWidth);
     dotEls.forEach((d, j) => d.classList.toggle("on", i === j));
   }, { passive: true });
 
@@ -1360,7 +1374,7 @@ registerPage("chat", (root) => {
     const waiting = addMsg("bot", "กำลังพิมพ์...");
     try {
       const d = await post("/api/chat", { message: text, history: hist.slice(-6) });
-      waiting.textContent = d.reply_th;
+      waiting.textContent = d.reply_th.replace(/\*\*(.+?)\*\*/g, "$1"); // ตัดตัวหนาแบบ Markdown ที่ AI อาจใส่มา
       hist.push({ role: "user", text }); hist.push({ role: "bot", text: d.reply_th });
     } catch (e) { waiting.textContent = "ขอโทษ ตอนนี้ตอบไม่ได้ (" + e.message + ") ลองใหม่อีกครั้ง"; }
     finally { sending = false; window.scrollTo(0, document.body.scrollHeight); }
