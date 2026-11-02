@@ -3,7 +3,7 @@
 > 🏆 **รางวัลยอดเยี่ยม** ด้านผู้นำความมั่นคงปลอดภัยไซเบอร์รุ่นใหม่ (Young Cybersecurity Leader)
 > Thailand Cybersecurity Product and Service Awards 2025 — สกมช. (NCSA)
 >
-> 🚀 พัฒนาต่อยอดส่งประกวด **Samsung Solve for Tomorrow 2026** และ **Thailand ICT Awards (TICTA) 2026**
+> 🚀 เวอร์ชันนี้ **พัฒนาขึ้นใหม่ทั้งหมด** เพื่อส่งประกวด **Samsung Solve for Tomorrow 2026** และ **Thailand ICT Awards (TICTA) 2026**
 
 🌐 **ทดลองใช้งานจริง:** https://deepfake-detector-x4ae.onrender.com
 (โฮสต์ฟรีบน Render — ถ้าไม่มีคนใช้สักพักแอปจะหลับ เข้าครั้งแรกอาจรอ ~1 นาที)
@@ -125,6 +125,16 @@ python run.py                       # เปิด http://localhost:8000
 
 ## ผู้พัฒนา
 
-**จิรัฏฐ์ มาแสวง (Jirat Masawang)** — ทีม โรงลาบยโส, โรงเรียนยโสธรพิทยาคม จ.ยโสธร
+**จิรัฏฐ์ มาแสวง (Jirat Masawang)** — โรงเรียนยโสธรพิทยาคม จ.ยโสธร
+
+| เวอร์ชัน | ผู้พัฒนา | รายละเอียด |
+|---|---|---|
+| เวอร์ชันแรก (2025) | ทีม 3 คน | ผลงานที่ได้รับรางวัล Thailand Cybersecurity Product and Service Awards 2025 |
+| **เวอร์ชันนี้ (2026)** | **จิรัฏฐ์ มาแสวง (พัฒนาคนเดียว)** | พัฒนาใหม่ทั้งหมด ทั้ง backend, frontend และระบบ AI โดยนำโมเดล open source มาปรับใช้และพัฒนาต่อ ได้แก่ ระบบ ensemble, การครอปใบหน้า, ฐานข้อมูลรูปแบบมิจฉาชีพไทย และการเชื่อม LLM อธิบายผลเป็นภาษาไทย |
+
+**Open source ที่นำมาใช้:** โมเดลตรวจ Deepfake จาก Hugging Face
+([`prithivMLmods/deepfake-detector-model-v1`](https://huggingface.co/prithivMLmods/deepfake-detector-model-v1),
+[`prithivMLmods/Deepfake-Detect-Siglip2`](https://huggingface.co/prithivMLmods/Deepfake-Detect-Siglip2)),
+FastAPI, OpenCV, yt-dlp
 
 พัฒนาโดยใช้ Claude Code เป็นผู้ช่วยเขียนโค้ด
