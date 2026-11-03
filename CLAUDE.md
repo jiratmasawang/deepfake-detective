@@ -124,7 +124,7 @@ python run.py                       # เปิด http://localhost:8000
 3. คงการรวมผลแบบค่าเฉลี่ย + รายการ timestamp ที่น่าสงสัย + degrade เมื่อ error + ส่ง `models_used` กลับไปด้วย
 4. เก็บ `MODEL_ID` (สตริงรวม) ไว้ให้ `/api/health` แสดงได้เหมือนเดิม
 
-> (สถานะ: ทำครบทั้ง 4 ข้อใน `video_pipeline.py` แล้ว — ใช้ได้ทั้งโหมดรันในเครื่องและโหมดเรียก Hugging Face ผ่าน `DEEPFAKE_HF_TOKEN` + มีชั้นตรรกะให้ Gemini มองภาพทั้งคลิปเสริม · บน Render ตั้งไว้โมเดลเดียวใน `render.yaml`)
+> (สถานะ: ทำครบทั้ง 4 ข้อใน `video_pipeline.py` แล้ว — ใช้ได้ทั้งโหมดรันในเครื่องและโหมดเรียก Hugging Face ผ่าน `DEEPFAKE_HF_TOKEN` · ทดสอบแล้วโมเดลใบหน้าสำเร็จรูปพลาดกับคลิปแบบใหม่ จึงให้ Gemini มองภาพทั้งคลิปเป็นตัวตัดสินหลัก โมเดลใบหน้าเป็นตัวสำรองตอน Gemini ตอบไม่ได้ (ดู `DEMO.md`) · บน Render ตั้งไว้โมเดลเดียวใน `render.yaml`)
 
 **เพิ่มความแม่นได้อีก (ถ้ามีเวลา):** เปลี่ยนตัวตรวจใบหน้าจาก Haar cascade เป็น MediaPipe/InsightFace (แม่นกว่า), เพิ่มโมเดลแนว CLIP-based universal detector (generalize ดีกับของใหม่), ใช้ GPU เร่งความเร็ว
 

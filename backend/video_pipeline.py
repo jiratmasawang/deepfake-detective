@@ -9,6 +9,9 @@
 3. รวมผลแบบค่าเฉลี่ย + timestamp ที่น่าสงสัย + degrade เมื่อ error + ส่ง models_used
 4. MODEL_ID (สตริงรวม) ให้ /api/health แสดงได้
 
+ลำดับการตัดสิน: Gemini มองภาพทั้งคลิปเป็นตัวตัดสินหลัก — โมเดลใบหน้าข้างบนใช้เป็นตัวสำรอง
+เฉพาะตอนที่ Gemini ตอบไม่ได้ (ทดสอบแล้วโมเดลสำเร็จรูปพลาดกับคลิปแบบใหม่ ดู DEMO.md)
+
 สองโหมดการให้คะแนน (เลือกอัตโนมัติ):
 - local  : ติดตั้ง torch+transformers → โหลดโมเดลรันในเครื่อง (แม่น/เป็นส่วนตัว แต่กินแรม)
 - remote : ตั้ง env DEEPFAKE_HF_TOKEN → เรียก Hugging Face Inference API แทน
@@ -467,6 +470,19 @@ def _analyze_file(video_path: str, base: dict, mode: str, models) -> dict:
         base["error_th"] = "อ่านภาพจากคลิปนี้ไม่ได้ คลิปอาจเสียหรือเป็นรูปแบบที่ไม่รองรับ"
         return base
 
+    # ชั้นตรรกะ: ให้ Gemini มองภาพรวมของคลิปว่า "เป็นไปได้จริงไหม" — ใช้เป็นตัวตัดสินหลัก
+    # ทดสอบแล้วโมเดลใบหน้าสำเร็จรูปพลาดกับคลิปแบบใหม่ (จับของปลอมได้ 1 ใน 4 และเตือนคลิปจริง
+    # ถึง 55% — ดู DEMO.md) จึงใช้โมเดลใบหน้าเฉพาะตอนที่ Gemini ตอบไม่ได้
+    reason = _reason_about_frames(frames)
+    reason_risk = 0.0
+    if reason:
+        base["reasoning_th"] = reason["findings_th"]
+        base["reasoning_summary_th"] = reason["summary_th"]
+        reason_risk = float(reason["ai_generated_percent"])
+        # เจอสิ่งที่เป็นไปไม่ได้ในความจริง = หลักฐานหนักแน่น อย่าให้ต่ำกว่า 80
+        if reason["impossible_in_real_life"]:
+            reason_risk = max(reason_risk, 80.0)
+
     # ตรวจหน้า + ให้คะแนนเฉพาะเฟรมที่เจอใบหน้า
     per_frame = []       # (timestamp, score) จากโมเดล
     artifact_vals = []   # ค่าร่องรอยในภาพต่อเฟรม (เทคนิคสังเกตด้วยตา)
@@ -483,8 +499,8 @@ def _analyze_file(video_path: str, base: dict, mode: str, models) -> dict:
             artifact_vals.append(_artifact_metrics(face))  # เร็ว ทำในเครื่อง
         except Exception:
             pass
-        if mode == "reason":
-            continue  # ไม่มีโมเดลใบหน้า — ให้ชั้นตรรกะตัดสินอย่างเดียว
+        if mode == "reason" or reason:
+            continue  # ชั้นตรรกะตัดสินได้แล้ว (หรือไม่มีโมเดลใบหน้า) — ไม่ต้องให้คะแนนหน้า
         try:
             if mode == "local":
                 per_frame.append((ts, _score_face_local(face, models)))
@@ -496,24 +512,16 @@ def _analyze_file(video_path: str, base: dict, mode: str, models) -> dict:
     base["frames_analyzed"] = len(frames)
     base["faces_found"] = faces_found
 
-    # ชั้นตรรกะ: มองภาพรวมของคลิปว่า "เป็นไปได้จริงไหม"
-    # ทำเสมอ ไม่ว่าจะเจอใบหน้าหรือไม่ เพราะคลิปที่คอมพิวเตอร์สร้างอาจไม่มีคนเลย
-    reason = _reason_about_frames(frames)
-    reason_risk = 0.0
     if reason:
-        base["reasoning_th"] = reason["findings_th"]
-        base["reasoning_summary_th"] = reason["summary_th"]
-        reason_risk = float(reason["ai_generated_percent"])
-        # เจอสิ่งที่เป็นไปไม่ได้ในความจริง = หลักฐานหนักแน่น อย่าให้ต่ำกว่า 80
-        if reason["impossible_in_real_life"]:
-            reason_risk = max(reason_risk, 80.0)
+        base["status"] = "ok"
+        base["risk_percent"] = round(min(95.0, reason_risk), 1)
+        base["models_used"] = []
+        if not reason.get("has_human_face", True):
+            base["faces_found"] = 0   # ตัวจับใบหน้าเข้าใจผิดว่าลวดลาย/ใบไม้คือหน้าคน
+        return base
 
-    # ไม่เจอใบหน้าเลย — เดิมตอบว่าประเมินไม่ได้ แต่ถ้าชั้นตรรกะให้คำตอบได้ก็ใช้ผลนั้น
+    # ไม่เจอใบหน้าเลย และชั้นตรรกะตอบไม่ได้ — บอกตรง ๆ ว่าประเมินไม่ได้
     if faces_found == 0:
-        if reason:
-            base["status"] = "ok"
-            base["risk_percent"] = round(min(95.0, reason_risk), 1)
-            return base
         base["status"] = "no_face"
         base["error_th"] = (
             "ไม่พบใบหน้าคนในคลิปนี้ จึงประเมินไม่ได้ — "
@@ -523,10 +531,6 @@ def _analyze_file(video_path: str, base: dict, mode: str, models) -> dict:
         return base
 
     if not per_frame:
-        if reason:
-            base["status"] = "ok"
-            base["risk_percent"] = round(min(95.0, reason_risk), 1)
-            return base
         base["error_th"] = (
             "พบใบหน้าในคลิปแต่ประเมินไม่สำเร็จ ลองใหม่อีกครั้งภายหลัง "
             "ระหว่างนี้ให้ใช้กฎเหล็ก 3 ข้อช่วยสังเกตแทน"
@@ -544,29 +548,9 @@ def _analyze_file(video_path: str, base: dict, mode: str, models) -> dict:
     if strong and avg >= 0.45:
         face_risk = min(95.0, face_risk + 5)
 
-    # รวมสองสัญญาณที่ตอบคนละคำถาม:
-    # - โมเดลใบหน้า: "หน้าคนนี้ถูกสลับไหม"  (เชื่อได้เฉพาะเมื่อในคลิปมีหน้าคนจริง)
-    # - ชั้นตรรกะ:  "ทั้งคลิปนี้เป็นไปได้จริงไหม"
-    #
-    # ตัวจับใบหน้าแบบเก่ามักเข้าใจผิดว่าใบไม้หรือลวดลายคือใบหน้า แล้วให้คะแนนสูงลอย ๆ
-    # จึงให้ชั้นตรรกะยืนยันก่อนว่ามีหน้าคนจริง ถ้าไม่มี ผลจากโมเดลใบหน้าคือขยะ ต้องทิ้ง
-    trust_face = True
-    if reason and not reason.get("has_human_face", True):
-        trust_face = False
-        base["faces_found"] = 0
-        base["artifact_notes_th"] = []   # ร่องรอยที่วัดจาก "หน้า" ที่ไม่ใช่หน้า ก็ใช้ไม่ได้เช่นกัน
-
-    if trust_face:
-        # เตือนเกินยังดีกว่าปล่อยคลิปปลอมผ่านไปให้เหยื่อเชื่อ
-        final = max(face_risk, reason_risk)
-    else:
-        final = reason_risk
-
     base["status"] = "ok"
-    base["risk_percent"] = round(min(95.0, final), 1)
-    base["suspicious_timestamps"] = (
-        [round(ts, 1) for ts, s in per_frame if s > 0.6] if trust_face else []
-    )
+    base["risk_percent"] = round(min(95.0, face_risk), 1)
+    base["suspicious_timestamps"] = [round(ts, 1) for ts, s in per_frame if s > 0.6]
     if mode == "remote":
         base["models_used"] = list(models)  # เฉพาะตัวที่ยังไม่ตาย
     return base
