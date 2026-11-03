@@ -135,7 +135,7 @@ async def analyze_video(body: VideoIn):
     if not url or not url.lower().startswith(("http://", "https://")):
         return JSONResponse(
             status_code=400,
-            content={"error_th": "กรุณาวางลิงก์คลิปที่ขึ้นต้นด้วย http:// หรือ https:// นะคะ"},
+            content={"error_th": "กรุณาวางลิงก์คลิปที่ขึ้นต้นด้วย http:// หรือ https:// ก่อนนะคะ"},
         )
     # งานหนัก — รันใน thread แยก ไม่บล็อกผู้ใช้คนอื่น
     loop = asyncio.get_event_loop()
@@ -160,11 +160,11 @@ async def analyze_video_file(file: UploadFile = File(...)):
             size += len(chunk)
             if size > MAX_UPLOAD_BYTES:
                 return JSONResponse(status_code=400, content={
-                    "error_th": "ไฟล์คลิปใหญ่เกินไป (เกิน 100 MB) ลองตัดให้สั้นลงหรือลดความละเอียดก่อนนะคะ"})
+                    "error_th": "ไฟล์คลิปมีขนาดใหญ่เกินไป (เกิน 100 MB) กรุณาตัดคลิปให้สั้นลงหรือลดความละเอียดก่อนนะคะ"})
             tmp.write(chunk)
         tmp.close()
         if size == 0:
-            return JSONResponse(status_code=400, content={"error_th": "ไม่พบไฟล์คลิป ลองเลือกไฟล์ใหม่นะคะ"})
+            return JSONResponse(status_code=400, content={"error_th": "ไม่พบไฟล์คลิป กรุณาเลือกไฟล์ใหม่ค่ะ"})
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(_video_executor, video_pipeline.analyze_video_file, tmp.name)
     finally:
@@ -178,7 +178,7 @@ async def analyze_video_file(file: UploadFile = File(...)):
 def chat(body: ChatIn):
     message = (body.message or "").strip()
     if not message:
-        return JSONResponse(status_code=400, content={"error_th": "พิมพ์คำถามก่อนนะคะ"})
+        return JSONResponse(status_code=400, content={"error_th": "กรุณาพิมพ์คำถามก่อนนะคะ"})
     return ai_client.get_client().chat(message, body.history)
 
 
@@ -207,7 +207,7 @@ def me(body: TokenIn):
     if username is None:
         return JSONResponse(
             status_code=401,
-            content={"ok": False, "error_th": "หมดเวลาเข้าสู่ระบบ กรุณาเข้าสู่ระบบใหม่นะคะ"},
+            content={"ok": False, "error_th": "หมดเวลาเข้าสู่ระบบ กรุณาเข้าสู่ระบบอีกครั้งนะคะ"},
         )
     return {"ok": True, "username": username}
 

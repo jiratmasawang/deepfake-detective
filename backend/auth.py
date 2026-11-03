@@ -64,17 +64,17 @@ def _hash_password(password: str, salt: bytes) -> bytes:
 def _validate_username(username: str) -> str | None:
     """คืนข้อความ error ภาษาไทย หรือ None ถ้าผ่าน"""
     if not username or len(username) < 3:
-        return "ชื่อผู้ใช้ต้องยาวอย่างน้อย 3 ตัวอักษร"
+        return "ชื่อผู้ใช้ต้องมีอย่างน้อย 3 ตัวอักษร"
     if len(username) > 30:
-        return "ชื่อผู้ใช้ต้องไม่เกิน 30 ตัวอักษร"
+        return "ชื่อผู้ใช้ต้องมีไม่เกิน 30 ตัวอักษร"
     if not re.fullmatch(r"[a-zA-Z0-9_฀-๿]+", username):
-        return "ชื่อผู้ใช้ใช้ได้เฉพาะตัวอักษรไทย อังกฤษ ตัวเลข และขีดล่าง (_)"
+        return "ชื่อผู้ใช้ใช้ได้เฉพาะตัวอักษรไทย ภาษาอังกฤษ ตัวเลข และขีดล่าง (_)"
     return None
 
 
 def _validate_password(password: str) -> str | None:
     if not password or len(password) < 6:
-        return "รหัสผ่านต้องยาวอย่างน้อย 6 ตัวอักษร"
+        return "รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร"
     if len(password) > 100:
         return "รหัสผ่านยาวเกินไป"
     return None
@@ -98,7 +98,7 @@ def register(username: str, password: str) -> dict:
                 (username, salt, pw_hash, time.time()),
             )
     except sqlite3.IntegrityError:
-        return {"ok": False, "error_th": "ชื่อผู้ใช้นี้มีคนใช้แล้ว ลองชื่ออื่นนะคะ"}
+        return {"ok": False, "error_th": "ชื่อผู้ใช้นี้ถูกใช้แล้ว กรุณาใช้ชื่ออื่น"}
     token = _create_session(username)
     return {"ok": True, "token": token, "username": username}
 

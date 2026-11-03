@@ -389,7 +389,7 @@ async function api(path, options) {
   let data = null;
   try { data = await res.json(); } catch (e) { /* ไม่ใช่ JSON */ }
   if (!res.ok) {
-    const err = new Error((data && data.error_th) || "เชื่อมต่อ Server ไม่ได้ ลองใหม่อีกครั้ง");
+    const err = new Error((data && data.error_th) || "เชื่อมต่อ Server ไม่ได้ กรุณาลองใหม่");
     err.data = data; throw err;
   }
   return data;
@@ -548,7 +548,7 @@ function levelOf(entry) {
 }
 function badgeFor(entry) {
   const lv = levelOf(entry);
-  const text = { safe: "ปลอดภัย", sus: "น่าสงสัย", fake: entry.kind === "text" ? "น่าจะหลอก" : "น่าจะปลอม", unk: "ตรวจไม่ได้" }[lv];
+  const text = { safe: "ปลอดภัย", sus: "น่าสงสัย", fake: entry.kind === "text" ? "น่าจะเป็นมิจฉาชีพ" : "น่าจะเป็นคลิปปลอม", unk: "ตรวจสอบไม่ได้" }[lv];
   return el("span", { class: "badge b-" + lv, text });
 }
 function fmtTime(ts) {
@@ -641,7 +641,7 @@ registerPage("splash", (root) => {
 ===================================================================== */
 registerPage("login", (root) => {
   const head = el("div", { class: "auth-head" }, logoImg(), wordmark());
-  head.appendChild(el("p", { class: "muted", style: "margin-top:12px", text: "สมัครเก็บไว้ หรือจะลองใช้เลยก็ได้" }));
+  head.appendChild(el("p", { class: "muted", style: "margin-top:12px", text: "สมัครสมาชิก หรือทดลองใช้งานได้เลย" }));
   root.appendChild(head);
 
   const card = el("div", { class: "card" });
@@ -658,7 +658,7 @@ registerPage("login", (root) => {
   const submitBtn = el("button", { class: "btn", text: "เข้าสู่ระบบ" });
   card.appendChild(submitBtn);
   card.appendChild(el("div", { class: "hr-text", text: "หรือ" }));
-  const guestBtn = el("button", { class: "btn ghost", text: "ใช้งานแบบไม่สมัครสมาชิก" });
+  const guestBtn = el("button", { class: "btn ghost", text: "ใช้งานโดยไม่ต้องสมัคร" });
   card.appendChild(guestBtn);
   root.appendChild(card);
 
@@ -676,7 +676,7 @@ registerPage("login", (root) => {
 
   async function submit() {
     const username = inUser.value.trim(), password = inPass.value;
-    if (!username || !password) { showMsg("กรอกชื่อผู้ใช้และรหัสผ่านให้ครบก่อน"); return; }
+    if (!username || !password) { showMsg("กรุณากรอกชื่อผู้ใช้และรหัสผ่านให้ครบ"); return; }
     submitBtn.disabled = true;
     const original = submitBtn.textContent;
     submitBtn.textContent = "กำลังดำเนินการ...";
@@ -723,8 +723,8 @@ registerPage("home", (root) => {
 
   root.appendChild(el("div", { class: "hero" },
     el("div", { class: "txt" },
-      el("h2", { html: "มาเช็กกัน<br>ว่าของจริงไหม" }),
-      el("p", { text: "อัปโหลดคลิปหรือวางลิงก์ แล้วให้ AI ช่วยตรวจให้" })),
+      el("h2", { html: "มาเช็กกัน<br>ว่าเป็นของจริงไหม" }),
+      el("p", { text: "อัปโหลดคลิปหรือวางลิงก์ แล้วให้ AI ช่วยตรวจสอบ" })),
     heroArt()));
 
   const scanBtn = el("button", { class: "btn scan-btn" }, icon("camera"), el("span", { text: "สแกนคลิป" }));
@@ -757,7 +757,7 @@ registerPage("home", (root) => {
   });
   root.appendChild(grid);
 
-  root.appendChild(el("div", { class: "sec-head" }, el("h2", { text: "กฎเหล็ก 3 ข้อ กันโดนหลอก" })));
+  root.appendChild(el("div", { class: "sec-head" }, el("h2", { text: "กฎเหล็ก 3 ข้อ ป้องกันมิจฉาชีพ" })));
   const rulesBox = el("div");
   root.appendChild(rulesBox);
   renderRules(rulesBox);
@@ -776,7 +776,7 @@ async function renderRules(box) {
     }
   } catch (e) {
     box.textContent = "";
-    box.appendChild(errBox("โหลดกฎเหล็กไม่ได้ — " + e.message));
+    box.appendChild(errBox("โหลดกฎเหล็กไม่ได้: " + e.message));
     const retry = el("button", { class: "btn ghost", style: "margin-top:10px", text: "ลองใหม่" });
     retry.addEventListener("click", () => renderRules(box));
     box.appendChild(retry);
@@ -794,7 +794,7 @@ registerPage("scan", (root) => {
   root.appendChild(topbar("สแกน"));
 
   const tabVideo = el("button", { class: "on" }, icon("video"), el("span", { text: "คลิปวิดีโอ" }));
-  const tabText = el("button", null, icon("mail"), el("span", { text: "ข้อความ / SMS" }));
+  const tabText = el("button", null, icon("mail"), el("span", { text: "ข้อความ SMS" }));
   root.appendChild(el("div", { class: "seg" }, tabVideo, tabText));
 
   /* ----- คลิป ----- */
@@ -809,7 +809,7 @@ registerPage("scan", (root) => {
   videoSec.appendChild(el("div", { class: "drop" },
     el("div", { class: "big" }, icon("video")),
     el("h3", { text: "อัปโหลดคลิปจากเครื่อง" }),
-    el("p", { class: "dim", text: "แนะนำ · ได้ผลแม่นกว่าวางลิงก์ · ไม่เกิน 100 MB" }),
+    el("p", { class: "dim", text: "แนะนำ · ผลตรวจแม่นยำกว่าเมื่ออัปโหลดไฟล์ · ไม่เกิน 100 MB" }),
     inFile, pickBtn, picked, prevVideo));
   videoSec.appendChild(fileBtn);
 
@@ -818,17 +818,17 @@ registerPage("scan", (root) => {
   const urlBtn = el("button", { class: "btn ghost", style: "margin-top:12px" }, icon("link"), el("span", { text: "ตรวจจากลิงก์" }));
   videoSec.appendChild(inUrl);
   videoSec.appendChild(urlBtn);
-  videoSec.appendChild(el("p", { class: "dim", style: "margin-top:12px", text: "บางแพลตฟอร์ม เช่น TikTok หรือ YouTube อาจไม่ยอมให้ Server โหลดคลิป ถ้าตรวจไม่ได้ ให้เซฟคลิปลงเครื่องแล้วอัปโหลดแทน" }));
+  videoSec.appendChild(el("p", { class: "dim", style: "margin-top:12px", text: "บางแพลตฟอร์ม เช่น TikTok หรือ YouTube อาจไม่อนุญาตให้ Server โหลดคลิป หากตรวจไม่ได้ ให้บันทึกคลิปลงเครื่องแล้วอัปโหลดแทน" }));
   const videoMsg = el("div", { style: "margin-top:12px" });
   videoSec.appendChild(videoMsg);
 
   /* ----- ข้อความ ----- */
   const textSec = el("div", { class: "hidden" });
-  const inText = el("textarea", { placeholder: "วางข้อความที่สงสัยตรงนี้ เช่น SMS, แชท LINE หรือสิ่งที่มีคนโทรมาบอก", "aria-label": "ข้อความที่สงสัย" });
+  const inText = el("textarea", { placeholder: "วางข้อความที่สงสัยตรงนี้ เช่น SMS แชท LINE หรือข้อความจากคนที่โทรมา", "aria-label": "ข้อความที่สงสัย" });
   const textBtn = el("button", { class: "btn", style: "margin-top:14px" }, icon("lens"), el("span", { text: "ตรวจข้อความนี้" }));
   textSec.appendChild(inText);
   textSec.appendChild(textBtn);
-  textSec.appendChild(el("p", { class: "dim", style: "margin-top:12px", text: "ระบบเทียบกับ 9 รูปแบบกลโกงที่พบบ่อยในไทย และให้ AI ช่วยวิเคราะห์" }));
+  textSec.appendChild(el("p", { class: "dim", style: "margin-top:12px", text: "ระบบจะตรวจเทียบกับกลโกง 9 รูปแบบที่พบบ่อยในไทย พร้อมให้ AI ช่วยวิเคราะห์" }));
   const textMsg = el("div", { style: "margin-top:12px" });
   textSec.appendChild(textMsg);
 
@@ -882,7 +882,7 @@ registerPage("scan", (root) => {
   textBtn.addEventListener("click", () => {
     const text = inText.value.trim();
     textMsg.textContent = "";
-    if (!text) { textMsg.appendChild(errBox("วางข้อความที่อยากตรวจก่อน")); return; }
+    if (!text) { textMsg.appendChild(errBox("กรุณาวางข้อความที่ต้องการตรวจก่อน")); return; }
     runScan({ kind: "text", name: text.replace(/\s+/g, " ").slice(0, 48), text });
   });
 });
@@ -929,7 +929,7 @@ registerPage("analyzing", (root) => {
       <circle cx="62" cy="62" r="54" stroke="url(#sg)" stroke-width="8" fill="none" stroke-linecap="round" stroke-dasharray="210 400"/></svg>
       <div class="bars"><i></i><i></i><i></i><i></i><i></i></div>` }),
     el("div", { class: "note", style: "max-width:340px;margin:0 auto;text-align:left" }, icon("info"),
-      el("span", { text: "เปิดแอปค้างไว้ระหว่างตรวจ อย่าเพิ่งปิดหน้านี้นะ" }))));
+      el("span", { text: "กรุณาเปิดแอปค้างไว้ระหว่างตรวจสอบ อย่าเพิ่งปิดหน้านี้" }))));
   function cancel(clear) {
     if (anCtrl) anCtrl.abort();
     anCtrl = null;
@@ -953,7 +953,7 @@ async function runScan(job) {
   } else {
     an.media.appendChild(el("div", { class: "txtprev", text: job.text }));
   }
-  an.sub.textContent = job.kind === "text" ? "ใช้เวลาไม่กี่วินาที" : "ตรวจทีละช่วงของคลิป อาจใช้เวลา 1–3 นาที";
+  an.sub.textContent = job.kind === "text" ? "ใช้เวลาเพียงไม่กี่วินาที" : "ระบบจะตรวจสอบคลิปทีละช่วง อาจใช้เวลา 1 ถึง 3 นาที";
   showPage("analyzing");
 
   anCtrl = new AbortController();
@@ -966,7 +966,7 @@ async function runScan(job) {
       const form = new FormData(); form.append("file", job.file);
       const res = await fetch(apiBase() + "/api/analyze-video-file", { method: "POST", body: form, signal });
       let d = null; try { d = await res.json(); } catch (e) { /* ไม่ใช่ JSON */ }
-      if (!res.ok) throw new Error((d && d.error_th) || "ส่งไฟล์ไม่สำเร็จ ลองใหม่อีกครั้ง");
+      if (!res.ok) throw new Error((d && d.error_th) || "ส่งไฟล์ไม่สำเร็จ กรุณาลองใหม่");
       data = d;
     }
     if (signal.aborted) return;
@@ -1049,16 +1049,16 @@ registerPage("result", (root) => {
     res.entry.saved = !res.entry.saved;
     updateHistory(res.entry.id, { saved: res.entry.saved });
     paintSave();
-    toast(res.entry.saved ? "บันทึกผลไว้ในประวัติแล้ว" : "เลิกบันทึกแล้ว");
+    toast(res.entry.saved ? "บันทึกผลไว้ในประวัติแล้ว" : "ยกเลิกการบันทึกแล้ว");
   });
   shareBtn.addEventListener("click", async () => {
     const e = res.entry; if (!e) return;
-    const text = `Deepfake Detective: ${res.titleText} (ความเสี่ยง ${e.risk}%)\n${res.subText}\n— ผลนี้เป็นสัญญาณเตือน ไม่ใช่คำตัดสิน 100%`;
+    const text = `Deepfake Detective: ${res.titleText} (ความเสี่ยง ${e.risk}%)\n${res.subText}\nผลนี้เป็นเพียงสัญญาณเตือน ไม่ใช่คำตัดสิน 100%`;
     if (navigator.share) {
-      try { await navigator.share({ title: "ผลตรวจ Deepfake Detective", text }); } catch (err) { /* ผู้ใช้ยกเลิก */ }
+      try { await navigator.share({ title: "ผลตรวจจาก Deepfake Detective", text }); } catch (err) { /* ผู้ใช้ยกเลิก */ }
       return;
     }
-    toast(await copyText(text) ? "คัดลอกผลตรวจแล้ว" : "คัดลอกไม่ได้ ลองแคปหน้าจอแทน");
+    toast(await copyText(text) ? "คัดลอกผลตรวจแล้ว" : "คัดลอกไม่ได้ ลองจับภาพหน้าจอแทน");
   });
 
   res.render = function (entry) {
@@ -1070,19 +1070,19 @@ registerPage("result", (root) => {
     let title, sub;
     if (lv === "unk") {
       title = d.status === "no_face" ? "ไม่พบใบหน้า<br><span class='hl-muted'>ในคลิปนี้</span>" : "ตรวจคลิป<span class='hl-muted'>ไม่สำเร็จ</span>";
-      sub = d.error_th || "ลองใหม่อีกครั้ง หรือเปลี่ยนเป็นอัปโหลดไฟล์คลิปแทน";
+      sub = d.error_th || "กรุณาลองใหม่ หรือเปลี่ยนมาอัปโหลดไฟล์คลิปแทน";
       res.titleText = d.status === "no_face" ? "ไม่พบใบหน้าในคลิป" : "ตรวจคลิปไม่สำเร็จ";
     } else if (lv === "fake") {
       title = `น่าจะเป็น <span class="hl-bad">${word.fake}</span>`;
-      sub = isText ? "ข้อความนี้เข้าข่ายกลโกงที่มิจฉาชีพใช้บ่อย" : "คลิปนี้มีสัญญาณว่าถูกสร้างหรือตัดต่อด้วย AI";
+      sub = isText ? "ข้อความนี้มีลักษณะคล้ายกลโกงที่มิจฉาชีพใช้กันบ่อย" : "คลิปนี้มีสัญญาณที่อาจเกิดจากการสร้างหรือตัดต่อด้วย AI";
       res.titleText = "น่าจะเป็น" + word.fake;
     } else if (lv === "sus") {
       title = `มีจุด<span class="hl-warn">น่าสงสัย</span>`;
-      sub = isText ? "บางส่วนของข้อความดูผิดปกติ ควรเช็กให้ชัวร์ก่อนทำตาม" : "บางช่วงของคลิปดูผิดปกติ ควรเช็กเพิ่มก่อนเชื่อ";
+      sub = isText ? "มีบางส่วนของข้อความที่ดูผิดปกติ ควรตรวจสอบให้แน่ใจก่อนทำตาม" : "มีบางช่วงของคลิปที่ดูผิดปกติ ควรตรวจสอบเพิ่มเติมก่อนเชื่อ";
       res.titleText = "มีจุดน่าสงสัย";
     } else {
       title = `ยังไม่พบ<br><span class="hl-good">${word.safe}</span>`;
-      sub = "แต่ถ้ามีการขอเงินหรือขอรหัส ให้ยึดกฎเหล็ก 3 ข้อไว้เสมอ";
+      sub = "แต่หากมีการขอเงินหรือรหัส ควรยึดกฎเหล็ก 3 ข้อไว้เสมอ";
       res.titleText = "ยังไม่พบ" + word.safe;
     }
     res.subText = sub;
@@ -1100,10 +1100,10 @@ registerPage("result", (root) => {
 
     // ----- ควรรู้อะไรบ้าง -----
     knowBtn.textContent = ""; knowBtn.classList.remove("open"); details.classList.add("hidden");
-    const advice = lv === "unk" ? "ระหว่างนี้ให้ใช้กฎเหล็ก 3 ข้อช่วยสังเกตพฤติกรรมแทน"
-      : (d.advice_th || (lv === "safe" ? "ผลดูปกติ แต่ยังควรเช็กแหล่งที่มาเสมอ" : "อาจถูกตัดต่อมา อย่าเพิ่งเชื่อหรือโอนเงิน ให้เช็กกับเจ้าตัวผ่านเบอร์จริงก่อน"));
+    const advice = lv === "unk" ? "ระหว่างนี้ ลองใช้กฎเหล็ก 3 ข้อช่วยสังเกตพฤติกรรมที่น่าสงสัย"
+      : (d.advice_th || (lv === "safe" ? "ผลตรวจดูปกติ แต่ควรตรวจสอบแหล่งที่มาทุกครั้ง" : "คลิปอาจผ่านการตัดต่อ อย่าเพิ่งเชื่อหรือโอนเงิน ควรโทรตรวจสอบกับเจ้าตัวผ่านเบอร์จริงก่อน"));
     knowBtn.appendChild(icon("bulb", "bulb"));
-    knowBtn.appendChild(el("span", { style: "flex:1" }, el("b", { text: "ควรรู้อะไรบ้าง?" }), el("p", { text: advice })));
+    knowBtn.appendChild(el("span", { style: "flex:1" }, el("b", { text: "สิ่งที่ควรรู้" }), el("p", { text: advice })));
     knowBtn.appendChild(icon("right", "chev"));
 
     details.textContent = "";
@@ -1116,7 +1116,7 @@ registerPage("result", (root) => {
     if (verdict) details.appendChild(el("p", { style: "margin:10px 0 4px;font-weight:600", text: verdict }));
     const signals = [].concat(d.signals_th || [], d.reasoning_th || []);
     if (signals.length) {
-      details.appendChild(el("h3", { style: "margin-top:12px", text: "จุดที่สังเกตได้" }));
+      details.appendChild(el("h3", { style: "margin-top:12px", text: "จุดที่พบ" }));
       for (const s of signals) details.appendChild(el("div", { class: "sig" }, icon("lens"), el("span", { text: s })));
     }
     if (d.artifact_notes_th && d.artifact_notes_th.length) {
@@ -1130,12 +1130,12 @@ registerPage("result", (root) => {
       }
       details.appendChild(el("p", { class: "dim", style: "margin-top:12px", text: meta }));
       details.appendChild(el("div", { class: "acc-warn" },
-        el("b", { text: "ลองเช็กด้วยตาอีกที: " }),
-        "ขอบหน้าและไรผมมีรอยต่อไหม ตากะพริบเป็นธรรมชาติไหม ฟันหรือหูผิดรูปไหม แสงบนหน้าเข้ากับฉากไหม ปากตรงกับเสียงไหม"));
+        el("b", { text: "ลองสังเกตด้วยตาอีกครั้ง: " }),
+        "ขอบหน้าและไรผมมีรอยต่อหรือไม่ ตากะพริบเป็นธรรมชาติไหม ฟันหรือหูมีรูปร่างผิดปกติหรือไม่ แสงบนใบหน้าสอดคล้องกับฉากไหม และการขยับปากตรงกับเสียงหรือไม่"));
     }
     if (!details.childNodes.length) details.appendChild(el("p", { class: "muted", text: advice }));
 
-    disc.textContent = d.disclaimer_th || "ผลนี้เป็นสัญญาณเตือน ไม่ใช่คำตัดสิน 100% — AI อาจพลาดกับคลิปหรือกลโกงรูปแบบใหม่ได้ ให้ยึดกฎเหล็ก 3 ข้อเป็นหลัก";
+    disc.textContent = d.disclaimer_th || "ผลตรวจนี้เป็นเพียงสัญญาณเตือน ไม่ใช่คำตัดสิน 100% เพราะ AI อาจตรวจพลาดได้ โดยเฉพาะคลิปหรือกลโกงรูปแบบใหม่ ควรยึดกฎเหล็ก 3 ข้อเป็นหลัก";
     saveBtn.classList.toggle("hidden", false);
     paintSave();
   };
@@ -1156,7 +1156,7 @@ registerPage("history", (root) => {
   const confirmBar = el("div", { class: "card confirm hidden" });
   const cNo = el("button", { style: "background:rgba(255,255,255,.06)", text: "ยกเลิก" });
   const cYes = el("button", { style: "background:rgba(255,77,109,.2);color:#ff8da2", text: "ลบทั้งหมด" });
-  confirmBar.appendChild(el("span", { text: "ลบประวัติทั้งหมดในเครื่องนี้?" }));
+  confirmBar.appendChild(el("span", { text: "ต้องการลบประวัติทั้งหมดในเครื่องนี้หรือไม่?" }));
   confirmBar.appendChild(cNo); confirmBar.appendChild(cYes);
   root.appendChild(confirmBar);
 
@@ -1167,7 +1167,7 @@ registerPage("history", (root) => {
   root.appendChild(el("div", { class: "filters" }, fAll, fSafe, fSus));
   const listBox = el("div");
   root.appendChild(listBox);
-  root.appendChild(el("p", { class: "dim center", style: "margin-top:14px", text: "ประวัติเก็บไว้ในเครื่องนี้เท่านั้น ไม่ได้ส่งขึ้น Server" }));
+  root.appendChild(el("p", { class: "dim center", style: "margin-top:14px", text: "ประวัติจะถูกเก็บไว้ในเครื่องนี้เท่านั้น และจะไม่ถูกส่งขึ้น Server" }));
 
   function setFilter(f) {
     filter = f;
@@ -1197,8 +1197,8 @@ registerPage("history", (root) => {
     });
     if (!items.length) {
       listBox.appendChild(el("div", { class: "empty" }, icon("clock"),
-        el("h3", { text: q || filter !== "all" ? "ไม่พบรายการที่ตรงกัน" : "ยังไม่มีประวัติการตรวจ" }),
-        el("p", { class: "dim", style: "margin-top:6px", text: "ผลการตรวจทุกครั้งจะแสดงที่นี่" })));
+        el("h3", { text: q || filter !== "all" ? "ไม่พบรายการที่ค้นหา" : "ยังไม่มีประวัติการตรวจ" }),
+        el("p", { class: "dim", style: "margin-top:6px", text: "ผลการตรวจแต่ละครั้งจะแสดงที่นี่" })));
       if (!q && filter === "all") {
         const go = el("button", { class: "btn", style: "margin-top:6px" }, icon("camera"), el("span", { text: "เริ่มสแกนคลิป" }));
         go.addEventListener("click", () => openScan("video"));
@@ -1225,12 +1225,12 @@ registerPage("history", (root) => {
    Tips — Spot the Signs
 ===================================================================== */
 const EYE_CHECKS = [
-  ["eye", "ดูรายละเอียดที่ผิดธรรมชาติ", "ขอบหน้า ไรผม หรือคอเบลอ สั่น หรือมีรอยต่อ ผิวเรียบเนียนเกินจริงจนไม่มีรูขุมขน"],
-  ["sun", "เช็กแสงและเงาว่าแปลกไหม", "ทิศทางแสงบนหน้าไม่ตรงกับฉากหลัง เงาหายไป หรือสีผิวหน้าไม่เข้ากับคอและมือ"],
-  ["spark", "ระวังสื่อที่ดูสมบูรณ์เกินจริง", "หน้าใสไร้ที่ติ ภาพคมผิดปกติ หรือดูเป็นมืออาชีพเกินกว่าแหล่งที่ส่งมา"],
-  ["lens", "สังเกตดวงตาและการกะพริบ", "กะพริบถี่หรือห่างผิดปกติ ตาไม่โฟกัส แสงสะท้อนในตาสองข้างไม่ตรงกัน"],
-  ["chat", "ปากขยับตรงกับเสียงไหม", "ริมฝีปากไม่ตรงกับคำพูด ขยับแข็ง ๆ หรือเสียงไม่มีจังหวะหายใจแบบคนจริง"],
-  ["alert", "ฟัน หู หรือแว่นผิดรูป", "ฟันเบลอเป็นก้อน หูบิด ต่างหูหรือแว่นวูบหายไปตอนขยับหัว"],
+  ["eye", "ดูจุดที่ผิดปกติ", "ขอบหน้า ไรผม หรือคออาจเบลอ สั่น หรือเห็นรอยต่อ ผิวดูเรียบเนียนเกินจริงจนไม่เห็นรูขุมขน"],
+  ["sun", "สังเกตแสงและเงาว่าผิดปกติหรือไม่", "ทิศทางแสงบนใบหน้าไม่ตรงกับฉากหลัง เงาบางส่วนหายไป หรือสีผิวบริเวณหน้าไม่เข้ากับคอและมือ"],
+  ["spark", "ระวังสื่อที่ดูสมบูรณ์แบบเกินจริง", "ใบหน้าใสไร้ที่ติ ภาพคมชัดผิดปกติ หรือดูเป็นมืออาชีพเกินกว่าที่ควรจะเป็น"],
+  ["lens", "สังเกตดวงตาและการกะพริบ", "กะพริบตาถี่หรือห่างผิดปกติ สายตาไม่โฟกัส หรือแสงสะท้อนในดวงตาทั้งสองข้างไม่ตรงกัน"],
+  ["chat", "สังเกตว่าปากขยับตรงกับเสียงหรือไม่", "ริมฝีปากขยับไม่ตรงกับคำพูด ขยับดูแข็งทื่อ หรือเสียงพูดไม่มีจังหวะหายใจเหมือนคนจริง"],
+  ["alert", "สังเกตฟัน หู และแว่นว่าผิดรูปหรือไม่", "ฟันเบลอจนดูเป็นก้อน หูบิดเบี้ยว หรือต่างหูและแว่นหายไปขณะขยับศีรษะ"],
 ];
 function accItem(tileContent, title, body, warn) {
   const item = el("div", { class: "acc" });
@@ -1256,17 +1256,17 @@ registerPage("tips", (root) => {
     <path d="m46 56 10 10 19-21" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
     <rect x="14" y="40" width="7" height="7" fill="#3b5bdb" opacity=".6"/><rect x="22" y="52" width="5" height="5" fill="#4f6bff" opacity=".5"/>
     <rect x="98" y="28" width="7" height="7" fill="#4f6bff" opacity=".6"/><rect x="104" y="44" width="5" height="5" fill="#3b5bdb" opacity=".5"/></svg>` }));
-  root.appendChild(el("h1", { class: "center", style: "font-size:1.45rem", text: "จับสังเกตให้เป็น" }));
-  root.appendChild(el("p", { class: "muted center", style: "margin:4px 0 18px", text: "รายละเอียดเล็ก ๆ บอกอะไรได้เยอะ" }));
+  root.appendChild(el("h1", { class: "center", style: "font-size:1.45rem", text: "ฝึกสังเกตให้เป็น" }));
+  root.appendChild(el("p", { class: "muted center", style: "margin:4px 0 18px", text: "รายละเอียดเล็ก ๆ อาจบอกอะไรได้มากกว่าที่คิด" }));
 
   const slides = el("div", { class: "slides" });
-  const s1 = el("div", { class: "slide" }, el("h3", { text: "1 / 3 · จับผิดคลิป Deepfake ด้วยตา" }));
+  const s1 = el("div", { class: "slide" }, el("h3", { text: "1 / 3 · สังเกตคลิป Deepfake ด้วยตนเอง" }));
   for (const [ic, t, b] of EYE_CHECKS) s1.appendChild(accItem(icon(ic), t, b));
-  s1.appendChild(el("div", { class: "acc-warn" }, "คลิปปลอมรุ่นใหม่เนียนจนตาคนแยกไม่ออก อย่าใช้วิธีนี้ตัดสินอย่างเดียว ให้ยึดกฎเหล็ก 3 ข้อเป็นหลัก"));
+  s1.appendChild(el("div", { class: "acc-warn" }, "Deepfake รุ่นใหม่ทำได้แนบเนียนจนแยกด้วยตาเปล่าได้ยาก อย่าใช้วิธีนี้ตัดสินเพียงอย่างเดียว ควรยึดกฎเหล็ก 3 ข้อเป็นหลัก"));
 
-  const s2 = el("div", { class: "slide" }, el("h3", { text: "2 / 3 · กฎเหล็ก 3 ข้อ กันโดนหลอก" }));
+  const s2 = el("div", { class: "slide" }, el("h3", { text: "2 / 3 · กฎเหล็ก 3 ข้อ ป้องกันมิจฉาชีพ" }));
   const s2box = el("div"); s2.appendChild(s2box);
-  const s3 = el("div", { class: "slide" }, el("h3", { text: "3 / 3 · 9 กลโกงที่เจอบ่อยในไทย" }));
+  const s3 = el("div", { class: "slide" }, el("h3", { text: "3 / 3 · กลโกง 9 รูปแบบที่พบบ่อยในไทย" }));
   const s3box = el("div"); s3.appendChild(s3box);
   slides.appendChild(s1); slides.appendChild(s2); slides.appendChild(s3);
   root.appendChild(slides);
@@ -1287,7 +1287,7 @@ registerPage("tips", (root) => {
       const rules = await fetchRules();
       s2box.textContent = "";
       for (const r of rules) s2box.appendChild(accItem(el("b", { text: String(r.id) }), r.title_th, r.detail_th));
-    } catch (e) { s2box.textContent = ""; s2box.appendChild(errBox("โหลดไม่ได้ — " + e.message)); }
+    } catch (e) { s2box.textContent = ""; s2box.appendChild(errBox("โหลดไม่ได้: " + e.message)); }
   })();
   (async () => {
     s3box.appendChild(spinnerBox("กำลังโหลด..."));
@@ -1295,7 +1295,7 @@ registerPage("tips", (root) => {
       const d = await api("/api/scam-patterns");
       s3box.textContent = "";
       for (const p of d.patterns) s3box.appendChild(accItem(el("span", { text: p.icon }), p.name_th, p.description_th, p.warning_th));
-    } catch (e) { s3box.textContent = ""; s3box.appendChild(errBox("โหลดไม่ได้ — " + e.message)); }
+    } catch (e) { s3box.textContent = ""; s3box.appendChild(errBox("โหลดไม่ได้: " + e.message)); }
   })();
 }, null, { full: true });
 
@@ -1303,31 +1303,31 @@ registerPage("tips", (root) => {
    Quiz
 ===================================================================== */
 const QUIZ = [
-  { q: "มีคนโทรมาอ้างเป็นตำรวจ บอกว่าบัญชีคุณพัวพันคดีฟอกเงิน ให้โอนเงินไป “บัญชีปลอดภัย” เพื่อตรวจสอบ ควรทำอย่างไร",
-    choices: ["รีบโอนตามที่บอก กลัวโดนดำเนินคดี", "วางสาย แล้วโทร 191 ถามเองว่ามีเรื่องจริงไหม", "ต่อรองขอโอนแค่ครึ่งเดียว"], answer: 1,
-    explain: "ตำรวจจริงไม่มีทางให้โอนเงินทางโทรศัพท์ และ “บัญชีปลอดภัย” ไม่มีอยู่จริง วางสายแล้วติดต่อหน่วยงานจริงด้วยตัวเองเสมอ" },
-  { q: "ลูกชายวิดีโอคอลมา หน้าเหมือน เสียงเหมือน ขอยืมเงินด่วน 20,000 บาท บอกว่าเปลี่ยนเบอร์ใหม่ ควรทำอย่างไร",
-    choices: ["โอนเลย เห็นหน้าชัดว่าเป็นลูก", "วางสาย แล้วโทรกลับเบอร์เดิมของลูกเพื่อถามเอง", "ขอให้ส่งรูปบัตรประชาชนมายืนยัน"], answer: 1,
-    explain: "Deepfake ปลอมได้ทั้งหน้าและเสียงแบบเรียลไทม์ ต้องโทรกลับเบอร์จริงที่เคยใช้ หรือถามคำถามที่มีแต่ตัวจริงรู้" },
-  { q: "เพจหนึ่งมีคลิปดาราดังชวนลงทุน การันตีกำไรวันละ 15% ไม่มีขาดทุน และมีรูปคนโชว์กำไรเยอะมาก",
-    choices: ["ลงก้อนเล็กลองก่อน ได้จริงค่อยเพิ่ม", "แชร์ให้เพื่อนช่วยดู", "ไม่ลงเด็ดขาด กำไรสูงแบบไม่มีความเสี่ยงไม่มีจริง"], answer: 2,
-    explain: "กำไรสูงแบบไม่มีความเสี่ยงไม่มีจริง มิจฉาชีพจะจ่ายจริงช่วงแรกเพื่อหลอกให้ลงก้อนใหญ่ และคลิปดาราก็ทำ Deepfake ได้" },
-  { q: "ได้ SMS ว่า “พัสดุของคุณมีปัญหา กดลิงก์เพื่อยืนยันที่อยู่” ควรทำอย่างไร",
-    choices: ["กดลิงก์ดูก่อน แค่ดูไม่เป็นไร", "ไม่กดลิงก์ ถ้าสงสัยให้เข้าแอปหรือเว็บขนส่งเองโดยตรง", "ตอบกลับถามว่าพัสดุอะไร"], answer: 1,
-    explain: "แค่กดลิงก์ก็อาจโดนหลอกให้ติดตั้งแอปดูดเงินได้ ถ้าอยากเช็กพัสดุ ให้เปิดแอปหรือเว็บขนส่งจริงด้วยตัวเอง" },
-  { q: "มีประกาศงานออนไลน์ “กดไลก์ได้เงินวันละ 3,000” แต่พอสมัครแล้วให้ “เติมเงินทำภารกิจ” ก่อน",
-    choices: ["เติมน้อย ๆ ก่อน เผื่อได้จริง", "ชวนเพื่อนมาทำด้วยกัน", "เลิกคุยทันที งานจริงไม่ให้เราจ่ายเงินก่อน"], answer: 2,
-    explain: "งานที่ให้เราจ่ายเงินก่อนคือกลโกงเสมอ ช่วงแรกอาจได้เงินนิดหน่อยเพื่อหลอกให้เติมก้อนใหญ่ สุดท้ายถอนไม่ได้" },
-  { q: "ถ้าเผลอโอนเงินให้มิจฉาชีพไปแล้ว สิ่งแรกที่ควรทำคืออะไร",
-    choices: ["โทร 1441 ทันที เพื่อขออายัดบัญชีปลายทาง", "โพสต์เตือนภัยในโซเชียลก่อน", "รอดูว่าเขาจะโอนคืนไหม"], answer: 0,
-    explain: "ยิ่งอายัดบัญชีเร็ว ยิ่งมีโอกาสได้เงินคืน โทร 1441 (สายด่วนตำรวจไซเบอร์) ทันที แล้วเก็บหลักฐานไว้แจ้งความ" },
-  { q: "ข้อใดคือ “กฎเหล็ก” ที่ช่วยกันโดนหลอกได้ดีที่สุด",
-    choices: ["เชื่อคลิปที่มีคนดูเยอะ เพราะคนเยอะคงไม่โดนหลอก", "ยิ่งโดนเร่งให้รีบตัดสินใจ ยิ่งต้องช้าและตรวจสอบก่อน", "เห็นหน้าชัดในวิดีโอคอล แปลว่าเป็นตัวจริงแน่นอน"], answer: 1,
-    explain: "ความเร่งรีบคืออาวุธหลักของมิจฉาชีพ เพราะไม่อยากให้เรามีเวลาคิด ส่วนหน้าและเสียงในคลิป ปลอมได้หมด" },
+  { q: "มีคนโทรมาอ้างว่าเป็นตำรวจ บอกว่าบัญชีของคุณเกี่ยวข้องกับคดีฟอกเงิน และให้โอนเงินไปยัง “บัญชีปลอดภัย” เพื่อตรวจสอบ คุณควรทำอย่างไร",
+    choices: ["รีบโอนตามที่บอก เพราะกลัวถูกดำเนินคดี", "วางสาย แล้วโทร 191 เพื่อสอบถามด้วยตัวเอง", "ต่อรองขอโอนเพียงครึ่งเดียว"], answer: 1,
+    explain: "ตำรวจจริงไม่มีทางให้โอนเงินทางโทรศัพท์ และไม่มี “บัญชีปลอดภัย” อยู่จริง ควรวางสายแล้วติดต่อหน่วยงานที่เกี่ยวข้องด้วยตัวเองเสมอ" },
+  { q: "ลูกชายวิดีโอคอลมา ทั้งหน้าและเสียงเหมือนจริง ขอให้โอนเงินด่วน 20,000 บาท โดยบอกว่าเปลี่ยนเบอร์ใหม่ คุณควรทำอย่างไร",
+    choices: ["รีบโอน เพราะเห็นหน้าชัดเจนว่าเป็นลูก", "วางสาย แล้วโทรกลับไปยังเบอร์เดิมของลูกเพื่อสอบถาม", "ขอให้ส่งรูปบัตรประชาชนมาเพื่อยืนยันตัวตน"], answer: 1,
+    explain: "Deepfake สามารถปลอมได้ทั้งใบหน้าและเสียงแบบเรียลไทม์ ควรโทรกลับไปยังเบอร์จริงที่เคยใช้ หรือลองถามคำถามที่มีเพียงตัวจริงเท่านั้นที่รู้" },
+  { q: "มีเพจหนึ่งโพสต์คลิปดาราดังชวนลงทุน โดยรับประกันกำไรวันละ 15% ไม่มีขาดทุน พร้อมรูปคนที่แสดงผลกำไรจำนวนมาก",
+    choices: ["ลงทุนก้อนเล็กก่อน ถ้าได้กำไรจริงค่อยเพิ่มเงิน", "แชร์ให้เพื่อนช่วยตรวจสอบ", "ไม่ลงทุนเด็ดขาด เพราะไม่มีการลงทุนที่ให้กำไรสูงโดยไม่มีความเสี่ยง"], answer: 2,
+    explain: "ไม่มีการลงทุนที่ให้กำไรสูงโดยไม่มีความเสี่ยง มิจฉาชีพอาจจ่ายเงินจริงในช่วงแรกเพื่อหลอกให้ลงทุนเพิ่มเป็นเงินก้อนใหญ่ และคลิปดาราก็สามารถสร้างด้วย Deepfake ได้" },
+  { q: "ได้รับ SMS แจ้งว่า “พัสดุของคุณมีปัญหา กดลิงก์เพื่อยืนยันที่อยู่” ควรทำอย่างไร",
+    choices: ["กดลิงก์เข้าไปดูก่อน แค่เปิดดูคงไม่เป็นไร", "อย่ากดลิงก์ หากสงสัยให้เข้าแอปหรือเว็บไซต์ของบริษัทขนส่งโดยตรง", "ตอบกลับไปถามว่าพัสดุอะไร"], answer: 1,
+    explain: "แค่กดลิงก์ก็อาจถูกหลอกให้ติดตั้งแอปดูดเงินได้ หากต้องการเช็กพัสดุ ให้เข้าแอปหรือเว็บไซต์ของบริษัทขนส่งด้วยตัวเอง" },
+  { q: "มีประกาศรับสมัครงานออนไลน์ว่า “กดไลก์ได้เงินวันละ 3,000” แต่เมื่อสมัครแล้วกลับให้ “เติมเงินทำภารกิจ” ก่อน",
+    choices: ["ลองเติมเงินจำนวนน้อย ๆ ก่อน เผื่อจะได้เงินจริง", "ชวนเพื่อนมาทำด้วยกัน", "หยุดคุยทันที เพราะงานจริงไม่ต้องให้เราจ่ายเงินก่อน"], answer: 2,
+    explain: "งานที่ให้จ่ายเงินก่อนเป็นกลโกงที่พบได้บ่อย ช่วงแรกอาจได้เงินเล็กน้อยเพื่อหลอกให้เติมเงินก้อนใหญ่ สุดท้ายก็ถอนเงินไม่ได้" },
+  { q: "หากเผลอโอนเงินให้มิจฉาชีพไปแล้ว ควรทำอะไรก่อนเป็นอันดับแรก",
+    choices: ["โทร 1441 ทันที เพื่อขออายัดบัญชีปลายทาง", "โพสต์เตือนภัยในโซเชียลก่อน", "รอดูว่ามิจฉาชีพจะโอนเงินคืนหรือไม่"], answer: 0,
+    explain: "ยิ่งอายัดบัญชีได้เร็ว ก็ยิ่งมีโอกาสได้เงินคืน โทร 1441 (สายด่วนตำรวจไซเบอร์) ทันที แล้วเก็บหลักฐานไว้แจ้งความ" },
+  { q: "ข้อใดคือ “กฎเหล็ก” ที่ช่วยป้องกันการถูกหลอกได้ดีที่สุด",
+    choices: ["เชื่อคลิปที่มียอดดูเยอะ เพราะมีคนดูเยอะคงไม่ถูกหลอก", "ยิ่งถูกเร่งให้รีบตัดสินใจ ยิ่งต้องใจเย็นและตรวจสอบให้ดีก่อน", "เห็นหน้าชัดเจนในวิดีโอคอล แปลว่าเป็นตัวจริงแน่นอน"], answer: 1,
+    explain: "มิจฉาชีพใช้ความเร่งรีบเป็นเครื่องมือสำคัญ เพราะไม่ต้องการให้เรามีเวลาคิด ส่วนใบหน้าและเสียงในคลิปก็ปลอมได้ทั้งหมด" },
 ];
 registerPage("quiz", (root) => {
   root.appendChild(topbar("Quiz รู้ทันกลโกง"));
-  root.appendChild(el("p", { class: "muted", style: "margin-bottom:16px", text: "7 สถานการณ์จริงที่คนไทยเจอบ่อย คุณจะรับมือยังไง?" }));
+  root.appendChild(el("p", { class: "muted", style: "margin-bottom:16px", text: "7 สถานการณ์จริงที่คนไทยพบบ่อย คุณจะรับมืออย่างไร?" }));
   const quizArea = el("div");
   root.appendChild(quizArea);
   let qi = 0, score = 0, answered = false;
@@ -1335,7 +1335,7 @@ registerPage("quiz", (root) => {
     quizArea.textContent = ""; answered = false;
     const item = QUIZ[qi];
     const card = el("div", { class: "card" });
-    card.appendChild(el("p", { class: "dim", text: `ข้อ ${qi + 1} / ${QUIZ.length} · ถูก ${score} ข้อ` }));
+    card.appendChild(el("p", { class: "dim", text: `ข้อ ${qi + 1} / ${QUIZ.length} · ตอบถูก ${score} ข้อ` }));
     card.appendChild(el("div", { class: "q-prog" }, el("i", { style: `width:${Math.round((qi / QUIZ.length) * 100)}%` })));
     card.appendChild(el("h3", { style: "margin-bottom:14px", text: item.q }));
     const explainSlot = el("div"), nextSlot = el("div"), btns = [];
@@ -1346,7 +1346,7 @@ registerPage("quiz", (root) => {
         const ok = i === item.answer; if (ok) score++;
         b.classList.add(ok ? "correct" : "wrong"); btns[item.answer].classList.add("correct");
         btns.forEach((x) => { x.disabled = true; });
-        explainSlot.appendChild(el("div", { class: "q-explain " + (ok ? "ok" : "no"), text: (ok ? "ถูกต้อง! " : "ยังไม่ใช่ — ") + item.explain }));
+        explainSlot.appendChild(el("div", { class: "q-explain " + (ok ? "ok" : "no"), text: (ok ? "ถูกต้อง! " : "ยังไม่ถูกต้อง ") + item.explain }));
         const nb = el("button", { class: "btn" }, el("span", { text: qi + 1 < QUIZ.length ? "ข้อต่อไป" : "ดูคะแนน" }), icon("right"));
         nb.addEventListener("click", () => { qi++; if (qi < QUIZ.length) renderQ(); else renderSum(); });
         nextSlot.appendChild(nb);
@@ -1359,7 +1359,7 @@ registerPage("quiz", (root) => {
   function renderSum() {
     quizArea.textContent = "";
     const pct = score / QUIZ.length;
-    const verdict = pct === 1 ? "เต็ม! รู้ทันมิจฉาชีพสุด ๆ" : pct >= 0.7 ? "เก่งมาก เกือบเต็มแล้ว" : pct >= 0.5 ? "ดีแล้ว ทบทวน Tips อีกนิดจะปลอดภัยขึ้น" : "ไม่เป็นไร ลองอ่าน Tips แล้วทำใหม่อีกรอบ";
+    const verdict = pct === 1 ? "เต็ม! รู้ทันมิจฉาชีพสุด ๆ" : pct >= 0.7 ? "เก่งมาก เกือบได้คะแนนเต็มแล้ว" : pct >= 0.5 ? "ทำได้ดีแล้ว ลองทบทวน Tips อีกนิด จะช่วยให้ปลอดภัยยิ่งขึ้น" : "ไม่เป็นไร ลองอ่าน Tips แล้วกลับมาทำใหม่อีกครั้ง";
     const card = el("div", { class: "card center" });
     card.appendChild(el("div", { class: "rule-num", style: "margin:4px auto 14px;width:64px;height:64px;border-radius:20px;font-size:1.3rem", text: `${score}/${QUIZ.length}` }));
     card.appendChild(el("h3", { text: verdict }));
@@ -1389,7 +1389,7 @@ registerPage("chat", (root) => {
     window.scrollTo(0, document.body.scrollHeight);
     return m;
   }
-  addMsg("bot", "สวัสดี! มีอะไรให้ช่วยไหม\nลองถามเช่น “มีคนโทรมาอ้างเป็นตำรวจ ทำยังไงดี” หรือ “คลิปดาราชวนลงทุน เชื่อได้ไหม”");
+  addMsg("bot", "สวัสดีค่ะ มีอะไรให้ช่วยไหมคะ\nลองถามได้ เช่น “มีคนโทรมาอ้างว่าเป็นตำรวจ ควรทำอย่างไรดี” หรือ “คลิปดาราชวนลงทุน เชื่อได้ไหม”");
   let sending = false;
   async function send() {
     const text = inMsg.value.trim();
@@ -1401,7 +1401,7 @@ registerPage("chat", (root) => {
       const d = await post("/api/chat", { message: text, history: hist.slice(-6) });
       waiting.textContent = d.reply_th.replace(/\*\*(.+?)\*\*/g, "$1"); // ตัดตัวหนาแบบ Markdown ที่ AI อาจใส่มา
       hist.push({ role: "user", text }); hist.push({ role: "bot", text: d.reply_th });
-    } catch (e) { waiting.textContent = "ขอโทษ ตอนนี้ตอบไม่ได้ (" + e.message + ") ลองใหม่อีกครั้ง"; }
+    } catch (e) { waiting.textContent = "ขออภัย ตอนนี้ยังตอบไม่ได้ (" + e.message + ") กรุณาลองใหม่อีกครั้ง"; }
     finally { sending = false; window.scrollTo(0, document.body.scrollHeight); }
   }
   sendBtn.addEventListener("click", send);
@@ -1420,27 +1420,27 @@ showPage = function (name, opts) {
 ===================================================================== */
 const INFO = {
   about: { title: "เกี่ยวกับแอป", html: `
-    <p><b>Deepfake Detective</b> คือเครื่องมือฟรีสำหรับตรวจคลิปวิดีโอ ลิงก์ และข้อความที่น่าสงสัยว่าเป็น Deepfake หรือมิจฉาชีพ</p>
+    <p><b>Deepfake Detective</b> เป็นเครื่องมือฟรีสำหรับตรวจสอบคลิปวิดีโอ ลิงก์ และข้อความที่น่าสงสัยว่าอาจเป็น Deepfake หรือเกี่ยวข้องกับมิจฉาชีพ</p>
     <h3>ทำงานอย่างไร</h3>
-    <p>คลิปวิดีโอ: ระบบตัดเฟรมจากคลิป หาใบหน้าด้วย OpenCV แล้วให้ AI Model 2 ตัวช่วยกันให้คะแนน (Ensemble) จากนั้นเฉลี่ยผลเป็นระดับความเสี่ยง</p>
-    <p>ข้อความ / SMS: เทียบกับ 9 รูปแบบกลโกงที่พบบ่อยในไทย ร่วมกับให้ AI วิเคราะห์และอธิบายผล</p>
+    <p>คลิปวิดีโอ: ระบบจะเลือกภาพจากหลายช่วงของคลิป แล้วให้ AI (Google Gemini) วิเคราะห์ภาพรวมว่ามีร่องรอยการสร้างหรือตัดต่อหรือไม่ หาก AI ไม่สามารถวิเคราะห์ได้ ระบบจะใช้ AI Model สำหรับตรวจจับใบหน้าเป็นตัวช่วยสำรอง</p>
+    <p>ข้อความ SMS: ระบบจะตรวจเทียบกับกลโกง 9 รูปแบบที่พบบ่อยในไทย พร้อมให้ AI ช่วยวิเคราะห์และอธิบายผล</p>
     <h3>ข้อจำกัด</h3>
-    <p>AI แม่นกับรูปแบบที่เคยเรียนรู้ แต่อาจพลาดกับ Deepfake หรือกลโกงรูปแบบใหม่ ผลตรวจจึงเป็นสัญญาณเตือน ไม่ใช่คำตัดสิน 100%</p>
+    <p>AI ทำงานได้ดีเมื่อพบรูปแบบที่เคยเรียนรู้ แต่อาจตรวจพลาดหากเป็น Deepfake หรือกลโกงรูปแบบใหม่ ผลตรวจจึงเป็นเพียงสัญญาณเตือน ไม่ใช่คำตัดสิน 100%</p>
     <p>พัฒนาโดย จิรัฏฐ์ มาแสวง · โรงเรียนยโสธรพิทยาคม</p>` },
   privacy: { title: "นโยบายความเป็นส่วนตัว", html: `
     <h3>ไฟล์คลิปที่อัปโหลด</h3>
-    <p>ใช้เพื่อวิเคราะห์เท่านั้น และถูกลบออกจาก Server ทันทีหลังตรวจเสร็จ</p>
+    <p>ไฟล์จะถูกนำไปใช้เพื่อวิเคราะห์เท่านั้น และลบออกจาก Server ทันทีหลังตรวจเสร็จ</p>
     <h3>ข้อความที่ส่งตรวจและคำถามในแชท</h3>
-    <p>ส่งไปประมวลผลกับบริการ AI ที่ตั้งค่าไว้ (เช่น Google Gemini) เพื่อสร้างคำอธิบาย ไม่ควรใส่ข้อมูลส่วนตัว เช่น เลขบัตรประชาชน รหัสผ่าน หรือเลขบัญชี</p>
+    <p>ข้อมูลจะถูกส่งไปประมวลผลกับบริการ AI ที่ตั้งค่าไว้ (เช่น Google Gemini) เพื่อสร้างคำอธิบาย ไม่ควรกรอกข้อมูลส่วนตัว เช่น เลขบัตรประชาชน รหัสผ่าน หรือเลขบัญชี</p>
     <h3>บัญชีผู้ใช้</h3>
-    <p>เก็บชื่อผู้ใช้และรหัสผ่านแบบเข้ารหัส (Hash) เท่านั้น ไม่เก็บรหัสผ่านจริง</p>
+    <p>ระบบเก็บเฉพาะชื่อผู้ใช้และรหัสผ่านในรูปแบบ Hash เท่านั้น โดยไม่เก็บรหัสผ่านจริง</p>
     <h3>ประวัติการตรวจ</h3>
-    <p>เก็บไว้ในเครื่องของคุณ (Local Storage) ไม่ได้ส่งขึ้น Server ลบได้ทุกเมื่อจากหน้าประวัติ</p>` },
+    <p>ประวัติจะเก็บไว้ในเครื่องของคุณ (Local Storage) โดยไม่ส่งขึ้น Server และสามารถลบได้ทุกเมื่อจากหน้าประวัติ</p>` },
   terms: { title: "ข้อตกลงการใช้งาน", html: `
-    <p>ผลตรวจจาก Deepfake Detective เป็นข้อมูลประกอบการตัดสินใจเท่านั้น ไม่ใช่การยืนยันว่าสิ่งใดจริงหรือปลอม 100%</p>
-    <p>ก่อนโอนเงินหรือให้ข้อมูลสำคัญ ให้ตรวจสอบกับเจ้าตัวหรือหน่วยงานจริงผ่านช่องทางทางการเสมอ</p>
-    <p>ห้ามใช้แอปนี้เพื่อหลอกลวง คุกคาม หรือละเมิดสิทธิ์ผู้อื่น</p>
-    <p>ถ้าถูกหลอกโอนเงิน โทร 1441 (สายด่วนตำรวจไซเบอร์) ทันที</p>` },
+    <p>ผลตรวจจาก Deepfake Detective เป็นเพียงข้อมูลประกอบการตัดสินใจ ไม่สามารถยืนยันได้ว่าสิ่งใดเป็นของจริงหรือของปลอม 100%</p>
+    <p>ก่อนโอนเงินหรือให้ข้อมูลสำคัญ ควรตรวจสอบกับเจ้าตัวหรือหน่วยงานที่เกี่ยวข้องผ่านช่องทางทางการทุกครั้ง</p>
+    <p>ห้ามใช้แอปนี้เพื่อหลอกลวง คุกคาม หรือละเมิดสิทธิของผู้อื่น</p>
+    <p>หากถูกหลอกให้โอนเงิน โทร 1441 (สายด่วนตำรวจไซเบอร์) ทันที</p>` },
 };
 let infoSet = null;
 function openInfo(key) { ensureBuilt("info"); infoSet(key); showPage("info"); }
@@ -1472,7 +1472,7 @@ registerPage("profile", (root) => {
   // สายด่วน (กดแล้วกางออก)
   const hotWrap = el("div", { class: "row-wrap" });
   const hotBody = el("div", { class: "row-body hidden" },
-    el("div", { class: "hotline" }, el("a", { href: "tel:1441", text: "1441" }), el("span", { text: "สายด่วนตำรวจไซเบอร์ แจ้งถูกหลอกออนไลน์และอายัดบัญชี 24 ชม." })),
+    el("div", { class: "hotline" }, el("a", { href: "tel:1441", text: "1441" }), el("span", { text: "สายด่วนตำรวจไซเบอร์ แจ้งเหตุถูกหลอกออนไลน์และขออายัดบัญชี ตลอด 24 ชม." })),
     el("div", { class: "hotline" }, el("a", { href: "tel:191", text: "191" }), el("span", { text: "เหตุด่วนเหตุร้าย" })));
   hotWrap.appendChild(row("phone", "สายด่วนช่วยเหลือ", "1441 · 191", () => hotBody.classList.toggle("hidden")));
   hotWrap.appendChild(hotBody);
@@ -1482,12 +1482,12 @@ registerPage("profile", (root) => {
   list.appendChild(row("doc", "ข้อตกลงการใช้งาน", null, () => openInfo("terms")));
   // ตั้งค่า Server (ขั้นสูง) — input สร้างครั้งเดียว ซ่อน/แสดงเท่านั้น
   const srvWrap = el("div", { class: "row-wrap" });
-  const inSrv = el("input", { type: "url", placeholder: "เว้นว่าง = อัตโนมัติ", "aria-label": "ที่อยู่ Server" });
+  const inSrv = el("input", { type: "url", placeholder: "เว้นว่างไว้เพื่อใช้ค่าอัตโนมัติ", "aria-label": "ที่อยู่ Server" });
   inSrv.value = lsGet("apiBase") || "";
   const srvMsg = el("p", { class: "dim", style: "margin-top:8px" });
   const srvSave = el("button", { class: "btn ghost", style: "margin-top:10px;min-height:46px", text: "บันทึก" });
   const srvBody = el("div", { class: "row-body hidden" },
-    el("p", { class: "dim", style: "margin-bottom:8px", text: "ปกติไม่ต้องแก้ ใช้เมื่อต้องการต่อ Server อื่นเท่านั้น" }), inSrv, srvSave, srvMsg);
+    el("p", { class: "dim", style: "margin-bottom:8px", text: "ปกติไม่ต้องแก้ไข ใช้เมื่อต้องการเชื่อมต่อกับ Server อื่นเท่านั้น" }), inSrv, srvSave, srvMsg);
   srvWrap.appendChild(row("server", "การเชื่อมต่อ Server", "ขั้นสูง", () => srvBody.classList.toggle("hidden")));
   srvWrap.appendChild(srvBody);
   list.appendChild(srvWrap);
@@ -1498,8 +1498,8 @@ registerPage("profile", (root) => {
     try {
       const r = await fetch(v + "/api/health");
       if (!r.ok) throw new Error();
-      lsSet("apiBase", v); srvMsg.textContent = "เชื่อมต่อได้ บันทึกแล้ว";
-    } catch (e) { srvMsg.textContent = "เชื่อมต่อไม่ได้ ตรวจสอบที่อยู่แล้วลองใหม่"; }
+      lsSet("apiBase", v); srvMsg.textContent = "เชื่อมต่อสำเร็จและบันทึกแล้ว";
+    } catch (e) { srvMsg.textContent = "เชื่อมต่อไม่ได้ กรุณาตรวจสอบที่อยู่แล้วลองใหม่"; }
   });
   root.appendChild(list);
 
@@ -1520,12 +1520,12 @@ registerPage("profile", (root) => {
     userBtn.appendChild(el("span", { class: "user-av" }, icon("user")));
     userBtn.appendChild(el("span", { style: "flex:1" },
       el("div", { class: "nm", text: guest ? "ผู้เยี่ยมชม" : state.username }),
-      el("div", { class: "dim", text: guest ? "สมัครสมาชิกหรือเข้าสู่ระบบ" : "อย่าลืมเช็กก่อนเชื่อนะ!" })));
+      el("div", { class: "dim", text: guest ? "สมัครสมาชิกหรือเข้าสู่ระบบ" : "อย่าลืมตรวจสอบก่อนเชื่อ!" })));
     userBtn.appendChild(icon("right", "chev"));
     userBtn.lastChild.style.cssText = "width:20px;height:20px;color:var(--text-3)";
     authBtn.textContent = "";
     authBtn.appendChild(icon(guest ? "user" : "logout"));
-    authBtn.appendChild(el("span", { text: guest ? "เข้าสู่ระบบ / สมัครสมาชิก" : "ออกจากระบบ" }));
+    authBtn.appendChild(el("span", { text: guest ? "เข้าสู่ระบบหรือสมัครสมาชิก" : "ออกจากระบบ" }));
     authBtn.className = guest ? "btn" : "btn danger";
     authBtn.style.marginTop = "16px";
   };
