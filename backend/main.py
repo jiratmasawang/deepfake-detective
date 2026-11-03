@@ -222,6 +222,15 @@ def logout(body: TokenIn):
 # เสิร์ฟ frontend (ต้อง mount ท้ายสุด ไม่งั้นทับ /api)
 # ---------------------------------------------------------------------------
 if os.path.isdir(FRONTEND_DIR):
+    # ให้เบราว์เซอร์/แอปที่ติดตั้งไว้ถามเซิร์ฟเวอร์ทุกครั้งว่ามีหน้าใหม่ไหม (ไฟล์ไม่เปลี่ยนก็ได้ 304 เร็ว ๆ)
+    # ถ้าไม่ส่ง header นี้ มือถือจะเดาอายุไฟล์เองแล้วใช้หน้าเก่าค้างไว้ได้เป็นวันหลัง deploy
+    @app.middleware("http")
+    async def no_stale_frontend(request, call_next):
+        response = await call_next(request)
+        if not request.url.path.startswith("/api/"):
+            response.headers["Cache-Control"] = "no-cache"
+        return response
+
     @app.get("/")
     def index():
         return FileResponse(os.path.join(FRONTEND_DIR, "index.html"))
