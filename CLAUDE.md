@@ -115,7 +115,7 @@ python run.py                       # เปิด http://localhost:8000
 
 ## 7. งานที่ต้องทำต่อ
 
-### 7.1 (กำลังทำ — ทำต่อให้เสร็จ) เพิ่มความแม่นของการตรวจวิดีโอด้วย open source
+### 7.1 (เสร็จแล้ว) เพิ่มความแม่นของการตรวจวิดีโอด้วย open source
 ปรับ `backend/video_pipeline.py` ตามแนวทางนี้ (อิงงานวิจัย 2026: ไม่มีโมเดลเดี่ยวแม่นสุด ควรผสมหลายตัว + เน้นใบหน้า):
 1. **Ensemble หลายโมเดล:** ให้ env `DEEPFAKE_MODEL_ID` รับหลายตัวคั่นด้วย comma → โหลดทุกตัว (ตัวที่โหลดไม่ได้ให้ข้าม) → ต่อเฟรม **เฉลี่ยคะแนน "ความเป็นของปลอม" จากทุกโมเดล**
    - ค่าเริ่มต้นแนะนำ: `prithivMLmods/deepfake-detector-model-v1,prithivMLmods/Deepfake-Detect-Siglip2`
@@ -124,13 +124,13 @@ python run.py                       # เปิด http://localhost:8000
 3. คงการรวมผลแบบค่าเฉลี่ย + รายการ timestamp ที่น่าสงสัย + degrade เมื่อ error + ส่ง `models_used` กลับไปด้วย
 4. เก็บ `MODEL_ID` (สตริงรวม) ไว้ให้ `/api/health` แสดงได้เหมือนเดิม
 
-> (สถานะ: โค้ดส่วนนี้ออกแบบไว้แล้วแต่ยังไม่ได้บันทึกลงไฟล์ — ให้เขียนทับ `video_pipeline.py` ด้วยตรรกะข้างบน โดยคงฟังก์ชัน `analyze_video(url)` และคีย์ผลลัพธ์เดิม: `status, risk_percent, frames_analyzed, faces_found, suspicious_timestamps, error_th`)
+> (สถานะ: ทำครบทั้ง 4 ข้อใน `video_pipeline.py` แล้ว — ใช้ได้ทั้งโหมดรันในเครื่องและโหมดเรียก Hugging Face ผ่าน `DEEPFAKE_HF_TOKEN` + มีชั้นตรรกะให้ Gemini มองภาพทั้งคลิปเสริม · บน Render ตั้งไว้โมเดลเดียวใน `render.yaml`)
 
 **เพิ่มความแม่นได้อีก (ถ้ามีเวลา):** เปลี่ยนตัวตรวจใบหน้าจาก Haar cascade เป็น MediaPipe/InsightFace (แม่นกว่า), เพิ่มโมเดลแนว CLIP-based universal detector (generalize ดีกับของใหม่), ใช้ GPU เร่งความเร็ว
 
 ### 7.2 เตรียมเดโม
-- เตรียม **คลิปตัวอย่าง 3–5 ลิงก์** ที่เทสต์ไว้แล้ว (กันโมเดล/เน็ตพลาดตอนแข่ง)
-- ทำให้ติดตั้งเป็นแอปได้ (ดู INSTALL_APP.md): deploy frontend ฟรี + เปิด backend ด้วย cloudflared tunnel → ทำ QR ให้กรรมการสแกนติดตั้งบนมือถือ
+- ~~เตรียม **คลิปตัวอย่าง 3–5 ลิงก์** ที่เทสต์ไว้แล้ว~~ → เสร็จแล้ว ดู `DEMO.md` (รวมข้อจำกัดที่พบ: โมเดลใบหน้าผ่าน Hugging Face เครดิตหมด)
+- ~~ทำให้ติดตั้งเป็นแอปได้~~ → deploy บน Render แล้ว + `qr-app.png` ชี้ไปที่เว็บ (ทางสำรอง: cloudflared tunnel ตาม INSTALL_APP.md)
 
 ### 7.3 ออปชันเสริม
 - เสริมความปลอดภัยระบบสมาชิก (จำกัดจำนวนครั้งล็อกอิน, session ถาวร, hash แข็งขึ้น เช่น bcrypt/argon2), ป้องกัน endpoint ด้วย token
