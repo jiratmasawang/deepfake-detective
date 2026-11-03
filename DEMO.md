@@ -6,11 +6,13 @@
 
 | # | คลิป | ความจริง | ผลที่ได้ | เวลารอ |
 |---|------|----------|---------|-------|
-| 1 | [ชายผมหงอกในคาเฟ่ (Veo 3)](https://commons.wikimedia.org/wiki/File:Grey_Haired_Man_in_a_Cosy_Cafe_(Veo_3).webm) | AI สร้างทั้งคลิป | 90% | 36 วิ |
-| 2 | [ภาพถ่ายเก่าปี 1920 ที่ถูกทำให้ขยับ (Deep Nostalgia)](https://commons.wikimedia.org/wiki/File:Rosamund_Feltner_(1880-1952)_circa_1920_animated.webm) | AI ทำให้ภาพนิ่งขยับ | 90% | 19 วิ |
-| 3 | [Kim Jong-Un โดย RepresentUs](https://commons.wikimedia.org/wiki/File:Dictators_-_Kim_Jong-Un_by_RepresentUs.webm) | Deepfake สลับหน้า (โฆษณารณรงค์) | 90% | 73 วิ |
-| 4 | [นายกเทศมนตรีกรุงปรากอวยพรปีใหม่ 2013](https://commons.wikimedia.org/wiki/File:Novoroční_přání_pražského_primátora_Bohuslava_Svobody_do_roku_2013.ogv) | คลิปจริง | 10% | 35 วิ |
-| 5 | [ผู้หญิงเดินในโตเกียว (Sora)](https://commons.wikimedia.org/wiki/File:OpenAI_Sora_in_Action-_Tokyo_Walk.webm) | AI สร้างทั้งคลิป | 90% | 151 วิ (ช้า เก็บไว้สำรอง) |
+| 1 | [ชายผมหงอกในคาเฟ่ (Veo 3)](https://commons.wikimedia.org/wiki/File:Grey_Haired_Man_in_a_Cosy_Cafe_(Veo_3).webm) | AI สร้างทั้งคลิป | 90% | 31 วิ |
+| 2 | [ภาพถ่ายเก่าปี 1920 ที่ถูกทำให้ขยับ (Deep Nostalgia)](https://commons.wikimedia.org/wiki/File:Rosamund_Feltner_(1880-1952)_circa_1920_animated.webm) | AI ทำให้ภาพนิ่งขยับ | 90% | 15 วิ |
+| 3 | [Kim Jong-Un โดย RepresentUs](https://commons.wikimedia.org/wiki/File:Dictators_-_Kim_Jong-Un_by_RepresentUs.webm) | Deepfake สลับหน้า (โฆษณารณรงค์) | 90% | 67 วิ |
+| 4 | [นายกเทศมนตรีกรุงปรากอวยพรปีใหม่ 2013](https://commons.wikimedia.org/wiki/File:Novoroční_přání_pražského_primátora_Bohuslava_Svobody_do_roku_2013.ogv) | คลิปจริง | 10% | 15 วิ |
+| 5 | [ผู้หญิงเดินในโตเกียว (Sora)](https://commons.wikimedia.org/wiki/File:OpenAI_Sora_in_Action-_Tokyo_Walk.webm) | AI สร้างทั้งคลิป | 90% | 118 วิ (ช้า เก็บไว้สำรอง) |
+
+(ผลและเวลาข้างบนวัดหลังแก้ให้ Gemini ตัดสินหลัก — คลิปจริงที่เจนีวาก็ได้ 0% บนเว็บจริง แต่รอ 149 วิ จึงไม่ใช้เดโม)
 
 ลำดับที่แนะนำ: คลิป 4 (จริง → ความเสี่ยงต่ำ) แล้วต่อด้วยคลิป 2 หรือ 1 (ปลอม → ความเสี่ยงสูง) ให้กรรมการเห็นความต่าง
 แล้วเปิด "ควรรู้อะไรบ้าง?" ให้ดูว่าระบบอธิบายจุดสังเกตเป็นภาษาไทย
