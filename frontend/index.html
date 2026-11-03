@@ -53,7 +53,7 @@ body {
   overflow-x: hidden;
 }
 button, input, textarea { font: inherit; color: inherit; }
-button { cursor: pointer; border: 0; background: none; }
+button { cursor: pointer; border: 0; background: none; touch-action: manipulation; -webkit-user-select: none; user-select: none; }
 img, svg { display: block; }
 .hidden { display: none !important; }
 
@@ -68,11 +68,19 @@ img, svg { display: block; }
               radial-gradient(50% 35% at 10% 90%, rgba(59,130,246,.16), transparent 70%);
 }
 
-#app { position: relative; z-index: 1; max-width: 520px; margin: 0 auto; min-height: 100vh; min-height: 100dvh; }
+/* ตัดส่วนที่ล้นด้านข้างตอนหน้าเลื่อนเข้า ไม่งั้นมือถือขยายหน้าจอกว้างเกินจอ */
+#app { position: relative; z-index: 1; max-width: 520px; margin: 0 auto; min-height: 100vh; min-height: 100dvh; overflow-x: hidden; overflow-x: clip; }
 .page { display: none; padding: calc(18px + env(safe-area-inset-top)) 20px calc(var(--nav-h) + 28px + env(safe-area-inset-bottom)); min-height: 100vh; min-height: 100dvh; }
-.page.active { display: block; animation: pageIn .28s ease both; }
+.page.active { display: block; animation: pageIn .3s cubic-bezier(.2,.8,.2,1); }
 .page.full { padding-bottom: calc(28px + env(safe-area-inset-bottom)); }
-@keyframes pageIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+/* เข้าหน้าย่อยเลื่อนมาจากขวา ย้อนกลับเลื่อนมาจากซ้าย สลับแท็บแค่จางเข้า
+   (ไม่ค้างค่า transform หลังจบ ไม่งั้นแถวพิมพ์แชทที่เป็น position:fixed จะเลื่อนตามหน้า) */
+.page.active[data-enter=back] { animation-name: pageBack; }
+.page.active[data-enter=tab] { animation: pageFade .2s ease; }
+@keyframes pageIn { from { opacity: 0; transform: translateX(28px); } to { opacity: 1; transform: none; } }
+@keyframes pageBack { from { opacity: 0; transform: translateX(-28px); } to { opacity: 1; transform: none; } }
+@keyframes pageFade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fadeDown { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
 
 /* ---------- ตัวอักษร ---------- */
 h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -.01em; line-height: 1.3; }
@@ -104,6 +112,14 @@ h3 { font-size: 1rem; font-weight: 600; line-height: 1.45; }
 .ic { width: 22px; height: 22px; flex: none; }
 .link { color: var(--blue-2); font-weight: 600; font-size: .92rem; display: inline-flex; align-items: center; gap: 2px; }
 .link .ic { width: 16px; height: 16px; }
+/* กดแล้วยุบลงนิดหนึ่งให้รู้ว่ากดติด — ปุ่มแถวในการ์ดใช้ไฮไลต์แทน */
+.tool, .h-item, .user-card, .q-choice, .filters button, .seg button, #nav button, .avatar-btn, .icon-btn, .link {
+  transition: transform .14s ease, background-color .15s ease, color .15s ease;
+}
+.tool:active, .h-item:active, .user-card:active, .q-choice:active, .filters button:active, .seg button:active,
+#nav button:active, .avatar-btn:active, .icon-btn:active, .link:active { transform: scale(.96); }
+.row, .acc-head, .know { transition: background-color .15s ease; }
+.row:active, .acc-head:active, .know:active { background-color: rgba(255,255,255,.05); }
 
 /* ---------- ฟอร์ม ---------- */
 .field { margin-bottom: 14px; }
@@ -282,7 +298,8 @@ input::placeholder, textarea::placeholder { color: var(--text-3); }
 .acc-head .chev { width: 18px; height: 18px; color: var(--text-3); transition: transform .2s; }
 .acc.open .acc-head .chev { transform: rotate(90deg); }
 .acc-body { display: none; padding: 0 14px 14px 64px; font-size: .88rem; color: var(--text-2); line-height: 1.6; }
-.acc.open .acc-body { display: block; }
+.acc.open .acc-body { display: block; animation: fadeDown .22s ease; }
+.row-body, .details { animation: fadeDown .22s ease; }
 .acc-warn { margin-top: 8px; padding: 10px 12px; border-radius: 12px; background: rgba(251,191,36,.08); border: 1px solid rgba(251,191,36,.25); color: #fde68a; font-size: .86rem; }
 .dots { display: flex; justify-content: center; gap: 8px; margin: 16px 0 4px; }
 .dots i { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,.2); transition: all .2s; }
@@ -326,7 +343,8 @@ input::placeholder, textarea::placeholder { color: var(--text-3); }
 
 .spinner { width: 34px; height: 34px; border-radius: 50%; border: 3px solid rgba(90,169,255,.2); border-top-color: var(--blue-2); animation: rot .8s linear infinite; margin: 0 auto; }
 .center { text-align: center; }
-.toast { position: fixed; left: 50%; bottom: calc(100px + env(safe-area-inset-bottom)); transform: translateX(-50%); background: #1d2a6b; border: 1px solid var(--line-2); padding: 11px 18px; border-radius: 999px; font-size: .9rem; white-space: nowrap; z-index: 50; box-shadow: 0 10px 30px rgba(0,0,0,.4); animation: pageIn .2s ease; }
+.toast { position: fixed; left: 50%; bottom: calc(100px + env(safe-area-inset-bottom)); transform: translateX(-50%); background: #1d2a6b; border: 1px solid var(--line-2); padding: 11px 18px; border-radius: 999px; font-size: .9rem; white-space: nowrap; z-index: 50; box-shadow: 0 10px 30px rgba(0,0,0,.4); animation: toastIn .2s ease; }
+@keyframes toastIn { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, 0); } }
 .info-body p { color: var(--text-2); font-size: .95rem; line-height: 1.75; margin-bottom: 12px; }
 .info-body h3 { margin: 16px 0 6px; }
 
@@ -566,8 +584,12 @@ function ensureBuilt(name) {
 function showPage(name, opts) {
   opts = opts || {};
   ensureBuilt(name);
-  if (TAB_PAGES.includes(name)) stack.length = 0;
+  const prev = currentPage;
+  if (prev) pages[prev].y = window.scrollY; // จำตำแหน่งที่เลื่อนไว้ กลับมาแล้วอยู่ที่เดิม
+  const isTab = TAB_PAGES.includes(name);
+  if (isTab) stack.length = 0;
   else if (!opts.replace && currentPage && currentPage !== name && !["splash", "analyzing"].includes(currentPage)) stack.push(currentPage);
+  if (name !== prev) pages[name].root.dataset.enter = opts.back ? "back" : isTab && TAB_PAGES.includes(prev) ? "tab" : "fwd";
   for (const [n, p] of Object.entries(pages)) p.root.classList.toggle("active", n === name);
   currentPage = name;
   navRoot.style.display = TAB_PAGES.includes(name) ? "block" : "none";
@@ -578,11 +600,11 @@ function showPage(name, opts) {
   }
   const p = pages[name];
   if (p.onShow) p.onShow(opts);
-  window.scrollTo(0, 0);
+  window.scrollTo(0, name !== prev && (opts.back || isTab) ? p.y || 0 : 0);
 }
 function goBack() {
   const prev = stack.pop();
-  showPage(prev || "home", { replace: true });
+  showPage(prev || "home", { replace: true, back: true });
 }
 
 /* ---------- แถบล่าง 3 ปุ่ม ---------- */
@@ -674,10 +696,13 @@ registerPage("login", (root) => {
 /* =====================================================================
    Home
 ===================================================================== */
+// จำกฎเหล็กไว้ในเครื่อง เปิดครั้งต่อไปขึ้นทันทีไม่ต้องรอ Server (ดึงของใหม่เงียบ ๆ ไว้ใช้ครั้งหน้า)
 let rulesCache = null;
+try { rulesCache = JSON.parse(lsGet("dd_rules")); } catch (e) { /* ข้าม */ }
 async function fetchRules() {
-  if (!rulesCache) rulesCache = (await api("/api/golden-rules")).rules;
-  return rulesCache;
+  const fresh = api("/api/golden-rules").then((d) => { lsSet("dd_rules", JSON.stringify(d.rules)); return d.rules; });
+  if (rulesCache) { fresh.catch(() => {}); return rulesCache; }
+  return (rulesCache = await fresh);
 }
 function heroArt() {
   return el("div", { class: "art", html: `<svg viewBox="0 0 120 120" fill="none">
@@ -909,7 +934,7 @@ registerPage("analyzing", (root) => {
     if (anCtrl) anCtrl.abort();
     anCtrl = null;
     if (clear && scanReset) scanReset();
-    showPage("scan", { replace: true });
+    showPage("scan", { replace: true, back: true });
   }
   closeBtn.addEventListener("click", () => cancel(false));
   trashBtn.addEventListener("click", () => cancel(true));
@@ -957,7 +982,7 @@ async function runScan(job) {
   } catch (e) {
     if (signal.aborted) return;
     anCtrl = null;
-    showPage("scan", { replace: true });
+    showPage("scan", { replace: true, back: true });
     scanError(job.kind, e.message);
   }
 }
@@ -1513,10 +1538,11 @@ registerPage("profile", (root) => {
   showPage("splash");
   const minSplash = new Promise((r) => setTimeout(r, 1500));
   if (state.token) {
-    try {
-      const d = await post("/api/me", { token: state.token });
-      state.username = d.username; lsSet("username", d.username);
-    } catch (e) { if (e.data && e.data.ok === false) clearAuth(); }
+    // Server ที่หลับอยู่อาจตอบช้าเป็นนาที — รอไม่เกิน 3 วินาที ที่เหลือเช็กต่อเบื้องหลัง
+    const check = post("/api/me", { token: state.token })
+      .then((d) => { state.username = d.username; lsSet("username", d.username); })
+      .catch((e) => { if (e.data && e.data.ok === false) clearAuth(); });
+    await Promise.race([check, new Promise((r) => setTimeout(r, 3000))]);
   }
   await minSplash;
   showPage(isLoggedIn() ? "home" : "login", { replace: true });
